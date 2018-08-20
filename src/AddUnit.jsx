@@ -1,5 +1,6 @@
 // @flow
 import React from 'react';
+import { connect } from 'react-redux';
 import { Button, Row, Col, Container, Form, FormGroup,
   Card, CardBody, CardTitle,
   Input, InputGroup, InputGroupAddon
@@ -8,7 +9,8 @@ import DropdownList from 'react-widgets/lib/DropdownList';
 import 'react-widgets/dist/css/react-widgets.css';
 import classNames from 'classnames';
 import firebase from './firebase.js';
-import withAuth from './FirebaseAuth';
+
+
 
 type State = {
   invalidField: String,
@@ -22,7 +24,17 @@ type State = {
   eduType: String
 }
 
-@withAuth
+const mapStateToProps = (state) => {
+  return {
+    groups: Object.values(state.groups),
+    units: Object.values(state.units),
+    pupils: Object.values(state.pupils),
+    isAdmin: state.isAdmin,
+
+  }
+}
+
+@connect(mapStateToProps)
 export default
 class AddUnit extends React.Component<{}, State> {
 
@@ -44,21 +56,16 @@ class AddUnit extends React.Component<{}, State> {
     let _authoritiesLoaded = false;
     try {
 
-      const authorities = await firebase.firestore().collection('authorities')
-                             .get();
-      const authoritiesDocs = authorities.docs;
-      _authorities = authoritiesDocs.map( doc => {
-        const docData = doc.data();
-        return {
-          name: docData.name,
-          region: docData.region
-        }
-      });
+      _authorities = this.props.authorities;
       _authoritiesLoaded = true;
 
     } catch( err ) {
       console.error(err);
     }
+    this.setState({
+      authorities: _authorities,
+      authoritiesLoaded: _authoritiesLoaded
+    });
 
     let _models = [];
     let _modelsLoaded = false;
@@ -78,8 +85,6 @@ class AddUnit extends React.Component<{}, State> {
     }
 
     this.setState({
-      authorities: _authorities,
-      authoritiesLoaded: _authoritiesLoaded,
       models: _models,
       modelsLoaded: _modelsLoaded
     });
@@ -181,29 +186,24 @@ class AddUnit extends React.Component<{}, State> {
       unit.invalidField = 'education_type';
       return unit;
     }
-
     return new Promise( (resolve, reject) => {
-
       try {
-        firebase.firestore().collection('units')
-                    .where('symbol', '==', unit.symbol)
-                    .get()
-                    .then( query => {
-
-                      if( query.docs.length > 0 ) {
-                        unit.validated = false;
-                        unit.invalidField = 'symbol';
-                        resolve(group);
-                      } else {
-                        unit.validated = true;
-                        resolve(unit);
-                      }
-
-                    })
-        } catch( err ) {
-          reject(err);
+      let unitExsist = this.props.units.find(( _unit )=>{
+          return unit.symbol === _unit.symbol
+        })
+        if (groupExsist){
+          unit.validated = false;
+          unit.invalidField = 'symbol';
+          resolve(group);
+        } else {
+          unit.validated = true;
+          resolve(unit);
         }
-      })
+      } catch( err ) {
+        reject(err);
+      }
+
+    })
 
   }
 

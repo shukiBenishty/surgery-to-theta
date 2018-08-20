@@ -9,7 +9,7 @@ import { Button, Row, Col, Input,
 
 import UnitUpdates from './UnitUpdates';
 import UnitGroups from './UnitGroups';
-import withAuth from './FirebaseAuth';
+import database from './firebase-database.js'
 
 type State = {
   docData: {
@@ -29,7 +29,7 @@ type Props = {
   docId: String
 }
 
-@withAuth
+
 @withRouter
 @connect()
 export default
@@ -63,54 +63,15 @@ class Unit extends React.Component<Props, State> {
 
   }
 
-  // static getDerivedStateFromProps(props, state) {
-  //
-  //   if( props.docId !== state.docId ) {
-  //
-  //     const getOptions = {
-  //       source: 'server'
-  //     }
-  //
-  //     return firebase.firestore().collection('units').doc(props.docId)
-  //       .get(getOptions)
-  //       .then( doc => {
-  //
-  //         let data = doc.data();
-  //
-  //         return{
-  //             docData: data,
-  //             docId: props.docId
-  //         }
-  //
-  //       });
-  //
-  //   } else {
-  //
-  //     // Return null to indicate no changes to state
-  //     return null;
-  //   }
-  //
-  // }
+
 
   async _loadData(docId: String) {
 
     if( docId !== this.props.id ) {
-
-      const getOptions = {
-        source: 'server'
-      }
-
-      const self = this;
-
-      const doc = await firebase.firestore().collection('units').doc(docId)
-                .get(getOptions);
-      let data = doc.data();
-
-      self.setState({
-          docData: data,
-          docId: docId
+      this.setState({
+        docData: database.getUnitById(docId),
+        docId: docId
       });
-
     }
 
   }

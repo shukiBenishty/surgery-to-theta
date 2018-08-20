@@ -1,8 +1,11 @@
 import firebase from './firebase.js';
 import {store} from './index.jsx';
 
+let initMode = true;
 const unitsRef = firebase.firestore().collection('units');
 const authoritiesRef = firebase.firestore().collection('authorities');
+const groupsRefs =[];
+const pupilsRefs =[];
 const usersRef = firebase.firestore().collection('users')
 
 var authorities = {};
@@ -12,10 +15,29 @@ var pupils = {};
 var users = {};
 
 
-exports.initDatabase = () => {
+const initAuthorities = () => {
+  authoritiesRef.onSnapshot( _authorities => {
+      _authorities.docChanges().forEach((authority) => {
+        if (authority.type === "removed") {
+          delete authorities[authority.doc.id];
+        }
+        else {
+          authorities[authority.doc.id] = authority.doc.data();
+        }
+      })
+      store.dispatch({
+        type: 'AUTHORITIES_CHANGED',
+        data: {
+          authorities: Object.values(authorities)
+        }
+      });
+  })
+}
+
+exports.initDatabase =  () => {
   try {
-    unitsRef.onSnapshot(_units => {
-      _units.docChanges().forEach((unit) => {
+     unitsRef.onSnapshot(async _units => {
+      await _units.docChanges().forEach( (unit) => {
         if (unit.type === "removed") {
           delete units[unit.doc.id];
         }
@@ -35,90 +57,93 @@ exports.initDatabase = () => {
           unitData.groups = __groups;
           units[unitId] = unitData;
           if (unit.type === "added") {
-            unitsRef.doc(unitId).collection('groups')
+             unitsRef.doc(unitId).collection('groups')
               .onSnapshot( _groups => {
-              _groups.docChanges().forEach((group) => {
-                if (group.type === "removed") {
-                  delete groups[group.doc.id];
-                }
-                else {
-                  const groupData = group.doc.data();
-                  const groupId = group.doc.id;
-                  const groupSymbol = groupData.symbol;
-                  const groupName = groupData.name;
-                  let __pupils = [];
-                  if (group.type === "modified") {
-                    __pupils = groups[groupId].pupils;
+                 _groups.docChanges().forEach(async (group) => {
+                  if (group.type === "removed") {
+                    delete groups[group.doc.id];
                   }
-                  groupData.unitId = unitId;
-                  groupData.unitName = unitName;
-                  groupData.groupId = groupId;
-                  groupData.pupils = __pupils;
-                  groups[groupId] = groupData;
-                  if (group.type === "added") {
-                    units[unitId].groups.push(groupId);
-                    unitsRef.doc(unitId)
-                      .collection('groups')
-                      .doc(groupId).collection('pupils')
-                      .onSnapshot(_pupils => {
-                        _pupils.docChanges().forEach( (pupil) => {
-                          if (pupil.type === "removed") {
-                            delete pupils[pupil.doc.id];
+                  else {
+                    const groupData = group.doc.data();
+                    const groupId = group.doc.id;
+                    const groupSymbol = groupData.symbol;
+                    const groupName = groupData.name;
+                    let __pupils = [];
+                    if (group.type === "modified") {
+                      __pupils = groups[groupId].pupils;
+                    }
+                    groupData.unitId = unitId;
+                    groupData.unitName = unitName;
+                    groupData.groupId = groupId;
+                    groupData.pupils = __pupils;
+                    groups[groupId] = groupData;
+                    if (group.type === "added") {
+                      units[unitId].groups.push(groupId);
+                       unitsRef.doc(unitId)
+                        .collection('groups')
+                        .doc(groupId).collection('pupils')
+                        .onSnapshot( _pupils => {
+                            _pupils.docChanges().forEach( (pupil) => {
+                            if (pupil.type === "removed") {
+                              delete pupils[pupil.doc.id];
 
-                          }
-                          else {
-
-                            const pupilData = pupil.doc.data();
-                            const id = pupil.doc.id;
-
-                            pupilData.id = id;
-                            pupilData.groupId = groupId;
-                            pupilData.groupSymbol = groupSymbol;
-                            pupilData.unitId = unitId;
-                            pupilData.unitName = unitName;
-                            pupilData.authority = authority;
-                            pupilData.groupName = groupName;
-                            pupils[id]  = pupilData;
-
-                            if (pupil.type === "added") {
-                              groups[groupId].pupils.push(id);
                             }
+                            else {
+
+                              const pupilData = pupil.doc.data();
+                              const id = pupil.doc.id;
+
+                              pupilData.id = id;
+                              pupilData.groupId = groupId;
+                              pupilData.groupSymbol = groupSymbol;
+                              pupilData.unitId = unitId;
+                              pupilData.unitName = unitName;
+                              pupilData.authority = authority;
+                              pupilData.groupName = groupName;
+                              pupils[id]  = pupilData;
+
+                              if (pupil.type === "added") {
+                                groups[groupId].pupils.push(id);
+                              }
 
                           }
+                        })
+
                           store.dispatch({
                             type: 'PUPILS_CHANGED',
                             data: {
                               pupils: Object.values(pupils)
                             }
                           });
-                        })
+
                       })
                     }
                   }
-
+                })
                   store.dispatch({
                     type: 'GROUPS_CHANGED',
                     data: {
                       groups: Object.values(groups)
                     }
                   });
-                })
+
               }
             )
           }
         }
+      })   
         store.dispatch({
           type: 'UNITS_CHANGED',
           data: {
             units: Object.values(units)
           }
         });
-      })
     })
+    initAuthorities();
   } catch( err ) {
       console.error(err);
   }
-
+ 
 };
 
 ////////// get all //////////

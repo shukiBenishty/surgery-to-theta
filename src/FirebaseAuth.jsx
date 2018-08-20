@@ -1,7 +1,7 @@
 // @flow
 import React from 'react';
 import firebase from './firebase.js';
-import { connect } from 'react-redux';
+import {store} from './index.jsx';
 
 type State = {
   secRoles: string[],
@@ -53,7 +53,7 @@ let withAuth = (WrappedComponent) => class extends React.Component<{}, State> {
         email: email,
         isAdmin: role === 'admin' ? true : false
       });
-      this.props.dispatch({
+      store.dispatch({
         type: 'USER_CHANGED',
         data: {
           secRoles: userRoles,
@@ -83,8 +83,4 @@ let withAuth = (WrappedComponent) => class extends React.Component<{}, State> {
   }
 }
 
-const mapStateToProps = (state) => {
-
-}
-
-export default connect(mapStateToProps)(withAuth);
+export default withAuth;

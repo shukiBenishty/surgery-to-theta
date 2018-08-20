@@ -7,6 +7,7 @@ import Logout from './Logout';
 import Dashboard from './Dashboard';
 import database from './firebase-database.js'
 
+
 const App = () => {
     database.initDatabase();
     return(

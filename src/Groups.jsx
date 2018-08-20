@@ -1,6 +1,7 @@
 // @flow
 import React from 'react';
 import { withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
 import ReactTable from 'react-table';
 import Multiselect from 'react-widgets/lib/Multiselect'
 import Datetime from 'react-datetime';
@@ -13,7 +14,7 @@ import { Container, Button,
   Tooltip,
   Modal, ModalHeader, ModalBody, ModalFooter
 } from 'reactstrap';
-import withAuth from './FirebaseAuth';
+
 
 type Group = {
     id: String,
@@ -39,7 +40,15 @@ type State = {
   groupId2Delete: String
 }
 
-@withAuth
+const mapStateToProps = (state) => {
+  return {
+    groups: state.groups,
+    authorities: state.authorities,
+    isAdmin: state.isAdmin
+  }
+}
+
+@connect(mapStateToProps)
 class Groups extends React.Component<{}, State> {
 
   state = {
@@ -55,95 +64,32 @@ class Groups extends React.Component<{}, State> {
   }
 
   async loadAuthorities() {
-
-    const getOptions = {
-      source: 'server'
-    }
-
-    try {
-
-      const authorities = await firebase.firestore().collection('authorities')
-                               .get(getOptions);
-      const authoritiesDocs = authorities.docs;
-      const _authorities = authoritiesDocs.map( doc => {
-        const docData = doc.data();
-        return {
-          name: docData.name,
-          region: docData.region
-        }
-      });
-
-      this.setState({
-        authorities: _authorities,
-        authoritiesLoaded: true
-      })
-
-    } catch( err ) {
-      return new Error(err);
-    }
-
+    this.setState({
+      authorities: this.props.authorities,
+      authoritiesLoaded: true
+    })
   }
 
   async loadGroups() {
 
     try {
-
-      const getOptions = {
-        source: 'server'
-      }
-
-      const _groups = [];
-      const userRoles = this.props.secRoles;
-
-      const units = await firebase.firestore().collection('units')
-             .get(getOptions)
-
-      units.docs.forEach( async(unit) => {
-
-        const unitData = unit.data();
-        const unitId = unit.id;
-        const unitName = unitData.name_he;
-        const authority = unitData.authority;
-
-        const groups = await firebase.firestore().collection('units')
-                      .doc(unit.id).collection('groups')
-                      .get(getOptions);
-
-        groups.docs.forEach( group => {
-
-            const groupData = group.data();
-            const groupId = group.id;
-            const secRole = data.sec_role;
-
-            const isAllowed = userRoles.find( role => {
-              return role === secRole
-            });
-
-            if( this.props.isAdmin || isAllowed ) {
-
-              const openTill = groupData.openTill ?
-                               moment.unix(groupData.openedTill.seconds).format('DD/MM/YYYY') :
-                               '';
-
-              _groups.push({
-                id: groupId,
-                unitId: unitId,
-                name: groupData.name,
-                symbol: groupData.symbol,
-                unitName: unitName,
-                authority: authority,
-                openFrom: moment.unix(groupData.openFrom.seconds).format('DD/MM/YYYY'),
-                openTill: openTill,
-                price: groupData.price,
-                capacity: groupData.capacity,
-                isAdmin: this.props.isAdmin
-              });
-            }
-
-        });
-
+      let _groups = this.props.groups.map(( group) => {
+        
+          // const openTill = group.openTill ?
+          //                 moment.unix(group.openedTill.seconds).format('DD/MM/YYYY') :
+          //                 '';
+          return {
+            id: group.groupId,
+            unitId: group.unitId,
+            name: group.name,
+            symbol: group.symbol,
+            unitName: group.unitName,
+            authority: group.authority,
+            price: group.price,
+            capacity: group.capacity,
+            isAdmin: this.props.isAdmin
+          };
       });
-
       this.setState({
         loading: false,
         groups: _groups
@@ -156,54 +102,16 @@ class Groups extends React.Component<{}, State> {
 
   }
 
-  async componentDidMount() {
+  componentDidUpdate(prevProps: Props, prevState: State) {
 
-    this.loadAuthorities();
-    const self = this;
-
-    fetch('https://us-central1-theta-1524876066401.cloudfunctions.net/api/groups',
-    {
-      method: 'GET'
-    })
-    .then( response => {
-        return response.json();
-    })
-    .then( groups => {
-
-        let _groups;
-        // if( this.props.isAdmin ) {
-
-          _groups = groups;
-
-        // } else {
-        //
-        //   _groups = groups.map( group => {
-        //
-        //     const secRole = group.secRole;
-        //
-        //     const isAllowed = this.props.secRoles.find( role => {
-        //       return role === secRole
-        //     });
-        //     return ( isAllowed ) ? group : null;
-        //
-        //  })
-
-        //};
-
-        _groups = _groups.filter( r => r); // remove not allowe groups
-
-        self.setState({
-          loading: false,
-          groups: _groups
-        })
-    })
-    .catch( error =>
-      console.error(`Fetch Error: ${error}`)
-    )
-
-    //this.loadGroups();
+    if( prevProps.isAdmin !== this.props.isAdmin ||
+        prevProps.groups !== this.props.groups) {
+        ::this.loadAuthorities();
+        ::this.loadGroups();
+    }
 
   }
+
 
   toggle() {
     this.setState({
@@ -270,10 +178,8 @@ class Groups extends React.Component<{}, State> {
         const updateField = fieldName;
         json[updateField] = value;
 
-        await firebase.firestore().collection('units')
-                        .doc(unitId).collection('groups')
-                        .doc(groupId)
-                        .update(json);
+        database.updateGroup(unitId, groupId, json)
+
      } catch( err ) {
        console.error(err);
      }

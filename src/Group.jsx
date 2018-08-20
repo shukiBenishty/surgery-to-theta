@@ -1,5 +1,6 @@
 // flow
 import React from 'react';
+import { connect } from 'react-redux';
 import { Button, Row, Col, Input,
          Card, CardBody, Tooltip,
          Modal, ModalHeader, ModalBody, ModalFooter
@@ -9,9 +10,10 @@ import Datetime from 'react-datetime';
 import moment from 'moment';
 import XLSX from 'xlsx';
 import firebase from './firebase.js';
-import withAuth from './FirebaseAuth';
+
 import GroupData from './model/GroupData';
 import PupilData from './model/PupilData';
+import database from './firebase-database.js'
 
 type State = {
   pupils: Array<PupilData>,
@@ -22,7 +24,13 @@ type State = {
   pupilId2Delete: String
 }
 
-@withAuth
+const mapStateToProps = (state) => {
+  return {
+    isAdmin: state.isAdmin
+  }
+}
+
+@connect(mapStateToProps)
 class Group extends React.Component<{}, State> {
 
   state = {
@@ -41,7 +49,8 @@ class Group extends React.Component<{}, State> {
 
   componentDidUpdate(prevProps: Props, prevState: State) {
 
-    if( prevProps.userEMail !== this.props.userEMail) {
+    if( prevProps.isAdmin !== this.props.isAdmin ||
+      prevProps !== this.props) {
       ::this.loadData();
     }
 
@@ -52,47 +61,24 @@ class Group extends React.Component<{}, State> {
     const groupId = this.props.match.params.groupid;
     const unitId = this.props.match.params.unitid;
 
-    const getOptions = {
-      source: 'server'
-    }
-
-    const groupDoc = firebase.firestore().collection('units')
-                    .doc(unitId).collection('groups')
-                    .doc(groupId);
-
     try {
 
-      const doc = await groupDoc.get(getOptions);
-      let data = doc.data();
+      let data = database.getGroupById(groupId);
 
-      // const secRole = data.sec_role;
-      // const userRoles = this.props.secRoles;
-      // const isAllowed = userRoles.find( role => {
-      //   return role === secRole
-      // });
+      const _groupData = new GroupData(data.name,
+                                        data.symbol,
+                                        data.capacity,
+                                        data.price,
+                                        data.openFrom,
+                                        data.openTill,
+                                        data.paymentInstallments);
+      this.setState({
+        groupData: _groupData
+      })
 
-      //if( this.props.isAdmin || isAllowed ) {
-
-        const _groupData = new GroupData(data.name,
-                                         data.symbol,
-                                         data.capacity,
-                                         data.price,
-                                         data.openFrom,
-                                         data.openTill,
-                                         data.paymentInstallments);
-        this.setState({
-          groupData: _groupData
-        })
-
-        const isAdmin = this.props.isAdmin;
-
-        this.observer = firebase.firestore().collection('units')
-                        .doc(unitId).collection('groups')
-                        .doc(groupId).collection('pupils')
-                        .onSnapshot( snapShot => {
-                          ::this.pupilsFromDocs(snapShot.docs, isAdmin);
-                        });
-       //}
+      const isAdmin = this.props.isAdmin;
+      const _pupils = database.getAllPupilsInGroup(groupId);
+      ::this.pupilsFromDocs(_pupils, isAdmin);
 
     } catch( err ) {
       console.error(err);
@@ -104,26 +90,20 @@ class Group extends React.Component<{}, State> {
       this.observer();
   }
 
-  pupilsFromDocs(docs,
-                 isAdmin: Boolean) {
+  pupilsFromDocs(pupils, isAdmin: Boolean) {
 
-    const _pupils = [];
-    docs.forEach( (pupilDoc) => {
-
-      const pupilData = pupilDoc.data();
-      const _pupil = new PupilData(pupilDoc.id,
-                              `${pupilData.name} ${pupilData.lastName}`,
-                               pupilData.lastName,
-                               pupilData.pupilId,
-                               pupilData.phoneNumber,
-                               pupilData.medicalLimitations,
-                               pupilData.birthDay,
-                               pupilData.whenRegistered,
-                               pupilData.parentId,
-                               pupilData.address,
-                               isAdmin);
-
-      _pupils.push(_pupil);
+    const _pupils = pupils.map( (pupil) => {
+      return new PupilData(pupil.id,
+                              `${pupil.name} ${pupil.lastName}`,
+                              pupil.lastName,
+                              pupil.pupilId,
+                              pupil.phoneNumber,
+                              pupil.medicalLimitations,
+                              pupil.birthDay,
+                              pupil.whenRegistered,
+                              pupil.parentId,
+                              pupil.address,
+                              isAdmin);
     })
 
     if( _pupils.length == 0 ) {
@@ -199,11 +179,7 @@ class Group extends React.Component<{}, State> {
         const updateField = fieldName;
         json[updateField] = value;
 
-        await firebase.firestore().collection('units')
-                        .doc(unitId).collection('groups')
-                        .doc(groupId).collection('pupils')
-                        .doc(pupilRecordId)
-                        .update(json);
+        database.updatePupil(unitId, groupId, pupilRecordId, json)
 
       } catch( err ) {
         console.error(err);
@@ -249,10 +225,9 @@ class Group extends React.Component<{}, State> {
 
   async deletePupil() {
 
-    await firebase.firestore().collection('units').doc(this.props.match.params.unitid)
-        .collection('groups').doc(this.props.match.params.groupid)
-        .collection('pupils').doc(this.state.pupilId2Delete)
-        .delete();
+    database.deletePupilById(this.props.match.params.unitid,
+                              this.props.match.params.groupid,
+                              this.state.pupilId2Delete);
 
     this.setState({
       modal: !this.state.modal,

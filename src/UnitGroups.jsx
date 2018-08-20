@@ -1,13 +1,15 @@
 // @flow
 import React from 'react';
 import { withRouter } from 'react-router-dom';
+import { connect } from 'react-redux';
 import ReactTable from 'react-table';
 import { Row, Col, Button,
   Modal, ModalHeader, ModalBody, ModalFooter } from 'reactstrap';
 import moment from 'moment';
 import http from 'http';
 import firebase from './firebase.js';
-import withAuth from './FirebaseAuth';
+import database from './firebase-database.js'
+
 
 type Props = {
   docId: String
@@ -30,8 +32,15 @@ type State = {
   groupId2Delete: String
 }
 
-@withAuth
+const mapStateToProps = (state) => {
+  return {
+    groups: state.groups,
+    isAdmin: state.isAdmin,
+  }
+}
+
 @withRouter
+@connect(mapStateToProps)
 export default
 class UnitGroups extends React.Component<Props, State> {
 
@@ -62,36 +71,21 @@ class UnitGroups extends React.Component<Props, State> {
 
   _loadcData(docId: String) {
 
-    const userRoles = this.props.secRoles;
 
-    const getOptions = {
-      source: 'server'
-    }
 
     const isAdmin = this.props.isAdmin;
 
-    this.unregisterCollectionObserver = firebase.firestore().collection('units')
-                       .doc(this.props.docId).collection('groups')
-                       .onSnapshot( snapShot => {
-                          ::this.groupsFromDocs(snapShot.docs, isAdmin);
-                        });
+    ::this.groupsFromDocs(database.getAllGroupsInUnit(this.props.docId), isAdmin);
 
   }
 
-  groupsFromDocs(docs,
-                 isAdmin: Boolean) {
+  groupsFromDocs(docs, isAdmin: Boolean) {
 
     let _groups: Group[] = [];
 
     docs.forEach( (group, index) => {
 
-      let data = group.data();
-      // const secRole = data.sec_role;
-      // const isAllowed = userRoles.find( role => {
-      //   return role === secRole
-      // });
-
-      //if( this.props.isAdmin || isAllowed ) {
+      let data = group;
 
         let _isClosed = data.isClosed;
 
@@ -106,7 +100,7 @@ class UnitGroups extends React.Component<Props, State> {
         let registeredPupils = ( data.registeredPupils ) ? data.registeredPupils : 0;
 
         _groups.push({
-          id: group.id,
+          id: group.groupId,
           name: data.name,
           symbol: data.symbol,
           openFrom: _openDate,
@@ -197,12 +191,9 @@ class UnitGroups extends React.Component<Props, State> {
         body: JSON.stringify(data2post)
       })
 
-      await firebase.firestore().collection('units')
-                      .doc(this.props.docId).collection('groups')
-                      .doc(groupData.id)
-                      .update({
-                        isClosed: groupData.isClosed
-                      });
+      database.updateGroup(this.props.docId, groupData.id, {
+                                          isClosed: groupData.isClosed
+                                        });
 
     } catch( err ) {
       console.error(err);
@@ -234,11 +225,7 @@ class UnitGroups extends React.Component<Props, State> {
       modal: !this.state.modal
     });
 
-    const deleteDoc = await firebase.firestore()
-                    .collection('units').doc(this.props.docId)
-                    .collection('groups').doc(this.state.groupId2Delete)
-                    .delete();
-    console.log(deleteDoc);
+    database.deleteGroupById(this.props.docId, this.state.groupId2Delete);
 
   }
 

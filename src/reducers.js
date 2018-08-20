@@ -4,6 +4,7 @@ const INITIAL_STATE = {
   secRoles: [''],
   email: '',
   isAdmin: false,
+  authorities: [],
   pupils: [],
   units: [],
   groups: [],
@@ -58,6 +59,13 @@ const reducers = (state = INITIAL_STATE, action) => {
     case 'PUPILS_CHANGED': {
       state = _.assign({}, state, {
                                     pupils: action.data.pupils
+                                  });
+    }
+    break;
+
+    case 'AUTHORITIES_CHANGED': {
+      state = _.assign({}, state, {
+                                    authorities: action.data.authorities
                                   });
     }
     break;

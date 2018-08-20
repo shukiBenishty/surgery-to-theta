@@ -14,7 +14,7 @@ import { Container, Button,
   Tooltip,
   Modal, ModalHeader, ModalBody, ModalFooter
 } from 'reactstrap';
-import withAuth from './FirebaseAuth';
+
 import database from './firebase-database.js'
 
 
@@ -49,10 +49,10 @@ type State = {
 
 const mapStateToProps = (state) => {
   return {
-    groups: state.groups,
-    pupils: state.pupils,
     units: state.units,
-    isAdmin: state.isAdmin
+    authorities: state.authorities,
+    pupils: state.pupils,
+    isAdmin: state.isAdmin,
   }
 }
 
@@ -89,33 +89,10 @@ class Pupils extends React.Component<{}, State> {
   }
 
  loadAuthorities() {
-
-    // const getOptions = {
-    //   source: 'server'
-    // }
-    //
-    // try {
-    //
-    //   const authorities = await firebase.firestore().collection('authorities')
-    //                            .get(getOptions);
-    //   const authoritiesDocs = authorities.docs;
-    //   const _authorities = authoritiesDocs.map( doc => {
-    //     const docData = doc.data();
-    //     return {
-    //       name: docData.name.trim(),
-    //       region: docData.region.trim()
-    //     }
-    //   });
-    //
-    //   this.setState({
-    //     authorities: _authorities,
-    //     authoritiesLoaded: true
-    //   })
-    //
-    // } catch( err ) {
-    //   return new Error(err);
-    // }
-
+      this.setState({
+        authorities: this.props.authorities,
+        authoritiesLoaded: true
+      })
   }
 
  loadPupils(isAdmin: Boolean) {
@@ -137,15 +114,11 @@ class Pupils extends React.Component<{}, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
-
-    if( prevProps.isAdmin !== this.props.isAdmin) {
-
-      const isAdmin = this.props.isAdmin;
-
+    if(prevProps.pupils !== this.props.pupils||
+      prevProps.isAdmin !== this.props.isAdmin){
       this.loadAuthorities();
-      this.loadPupils(isAdmin);
+      this.loadPupils(this.props.isAdmin);
     }
-
   }
 
   renderCheckable(cellInfo) {
@@ -385,12 +358,9 @@ class Pupils extends React.Component<{}, State> {
       _units: _units
     });
     this.filerPupils(_units, this.state.selectedUnits);
-
-    // this.filerPupils(_units, authorities.length, this.state.selectedUnits, this.state.selectedUnits.length)
   }
 
-  // filerPupils(unitsFromAuthorities, selectedAuthorities_length , unitsFromUnits, UFU_length){
-  //   if (selectedAuthorities_length === 0 && UFU_length === 0) {
+
   filerPupils(unitsFromAuthorities , unitsFromUnits){
     if (this.state.selectedAuthorities.length === 0 && this.state.selectedUnits.length === 0) {
           this.setState({

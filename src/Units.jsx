@@ -1,5 +1,6 @@
 // @flow
 import React from 'react';
+import { connect } from 'react-redux';
 import firebase from './firebase.js';
 import classNames from 'classnames';
 import ReactTable from 'react-table';
@@ -7,7 +8,7 @@ import 'react-table/react-table.css';
 import Unit from './Unit';
 import Groups from './Groups';
 import Pagination from './TablePagination';
-import withAuth from './FirebaseAuth';
+
 
 import { Button, Card, CardBody, Row, Col } from 'reactstrap';
 
@@ -22,7 +23,14 @@ type State = {
   dataStatus: string
 }
 
-@withAuth
+const mapStateToProps = (state) => {
+  return {
+    units: state.units,
+    isAdmin: state.isAdmin
+  }
+}
+
+@connect(mapStateToProps)
 export default
 class Units extends React.Component<{}, State> {
 
@@ -45,39 +53,25 @@ class Units extends React.Component<{}, State> {
 
   async componentDidUpdate(prevProps: Props, prevState: State) {
 
-    if( this.props.secRoles.length != prevProps.secRoles.length ) {
-      const userRoles = this.props.secRoles;
+    if( this.props.units !== prevProps.units ||
+      this.props.isAdmin !== prevProps.isAdmin) {
 
-      const getOptions = {
-        source: 'server'
-      }
 
       const self = this;
 
-      const response = await firebase.firestore().collection('units')
-                       .get(getOptions);
-
       const _units = [];
 
-      response.docs.forEach( (unit) => {
+      this.props.units.forEach( (unit) => {
 
-        const unitData = unit.data();
-
-        // const secRole = unitData.sec_role;
-        // const isSecGroupFound = userRoles.find( role => {
-        //   return role === secRole
-        // });
-
-        //if( this.props.isAdmin || isSecGroupFound ) {
           _units.push({
-            name: unitData.name_he,
-            education_type: unitData.education_type,
-            authority: unitData.authority,
-            region: unitData.region,
-            cluster: unitData.cluster,
-            type: unitData.type,
-            symbol: unitData.symbol,
-            id: unit.id
+            name: unit.name_he,
+            education_type: unit.education_type,
+            authority: unit.authority,
+            region: unit.region,
+            cluster: unit.cluster,
+            type: unit.type,
+            symbol: unit.symbol,
+            id: unit.unitId
           });
         //}
 

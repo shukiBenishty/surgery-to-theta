@@ -19,10 +19,11 @@ import Group from './Group';
 import AddGroup from './AddGroup';
 import AddUnit from './AddUnit';
 import AddPupil from './AddPupil';
+import withAuth from './FirebaseAuth';
 
 import firebase from './firebase.js';
 import dashboardRoutes from './routes/dashboard.jsx';
-import withAuth from './FirebaseAuth';
+
 
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -37,6 +38,7 @@ type Props = {
     path: String
   }
 }
+
 
 const mapStateToProps = (state) => {
   return {

@@ -1,5 +1,6 @@
 // @flow
 import React from 'react';
+import { connect } from 'react-redux';
 import { Button, Row, Col, Container, Form, FormGroup,
   Card, CardBody, CardTitle,
   Input, InputGroup, InputGroupAddon,
@@ -14,8 +15,10 @@ import moment from 'moment';
 import _ from 'moment/locale/he';
 import classNames from 'classnames';
 import firebase from './firebase.js';
-import withAuth from './FirebaseAuth';
+
 import GroupData from './model/GroupData';
+import database from './firebase-database.js'
+
 
 type State = {
   unit: Object,
@@ -27,7 +30,15 @@ type State = {
 }
 
 
-@withAuth
+const mapStateToProps = (state) => {
+  return {
+    groups: state.groups,
+    units: state.units,
+    isAdmin: state.isAdmin
+  }
+}
+
+@connect(mapStateToProps)
 export default
 class AddGroup extends React.Component<{}, State> {
 
@@ -76,17 +87,15 @@ class AddGroup extends React.Component<{}, State> {
     if( groupId != 0 ) {
 
       try {
-        const groupDoc = database.getUnitById(groupId);
 
-        const _groupData = groupDoc;
-        const groupData =
-            new GroupData(_groupData.name,
-                          _groupData.symbol,
-                          _groupData.capacity,
-                          _groupData.price,
-                          _groupData.openFrom,
-                          _groupData.openTill,
-                          _groupData.paymentInstallments);
+        const _groupData = database.getGroupById(groupId);
+        const groupData = new GroupData(_groupData.name,
+                              _groupData.symbol,
+                              _groupData.capacity,
+                              _groupData.price,
+                              _groupData.openFrom,
+                              _groupData.openTill,
+                              _groupData.paymentInstallments);
 
         this.setState({
           groupData: groupData
@@ -167,29 +176,18 @@ class AddGroup extends React.Component<{}, State> {
     } else {
 
       return new Promise( (resolve, reject) => {
-
         try {
-          firebase.firestore().collection('units')
-                      .doc(unitId).collection('groups')
-                      .where('symbol', '==', group.symbol)
-                      .get()
-                      .then( query => {
-
-                        if( query.docs.length > 0 ) {
-                          group.validated = false;
-                          group.invalidField = 'symbol';
-                          resolve(group)
-                        } else {
-                          group.validated = true;
-                          resolve(group)
-                        }
-
-                      })
-                      .catch( err => {
-                        console.error( err );
-                        reject(err);
-                      })
-
+        let groupExsist = this.props.groups.find(( _group )=>{
+            return group.symbol === _group.symbol
+          })
+          if (groupExsist){
+            group.validated = false;
+            group.invalidField = 'symbol';
+            resolve(group)
+          } else {
+            group.validated = true;
+            resolve(group)
+          }
         } catch( err ) {
           reject(err);
         }
@@ -292,44 +290,12 @@ class AddGroup extends React.Component<{}, State> {
 
       // Add new or update group to/in Firestore
       if( this.props.match.params.groupid === '0' ) {
-        const doc = await firebase.firestore()
-                      .collection('units').doc(unitId)
-                      .collection('groups')
-                      .add(group);
+        database.addGroup(unitId, group);
       } else {
-        const doc = await firebase.firestore()
-                      .collection('units').doc(unitId)
-                      .collection('groups').doc(this.props.match.params.groupid)
-                      .update(group);
+        database.updateGroup(unitId, this.props.match.params.groupid, group);
       }
 
-      // Grant permissions to current user
-      // let response = await firebase.firestore().collection('users')
-      //                                 .where("email", "==", this.props.userEMail)
-      //                                 .get();
-      // if( response.docs.length != 0 ) {
-      //   const userDoc = response.docs[0];
-      //   const secRoles = this.props.secRoles;
-      //   secRoles.push(group.sec_role);
-      //
-      //   await firebase.firestore().collection('users')
-      //         .doc(userDoc.id)
-      //         .update({
-      //            sec_roles: secRoles
-      //         })
-      //
-      //         toast.update(this.toastId,
-      //               {
-      //                 render: 'כיתה חדשה התווספה',
-      //                 type: toast.TYPE.SUCCESS,
-      //                 autoClose: 3000,
-      //                 className: css({
-      //                   transform: "rotateY(360deg)",
-      //                   transition: "transform 0.6sec"
-      //                 })
-      //               });
-      //
-      // }
+
 
       setTimeout( () => this.props.history.push(`/dashboard/units`),
                  1500);

@@ -15,7 +15,6 @@ import moment from 'moment';
 import _ from 'moment/locale/he';
 import classNames from 'classnames';
 import firebase from './firebase.js';
-import withAuth from './FirebaseAuth'
 import PupilData from './model/PupilData';
 import DropdownList from 'react-widgets/lib/DropdownList';
 import database from './firebase-database.js'
@@ -129,15 +128,17 @@ type State = {
   pupil: Pupil
 }
 
+
+
 const mapStateToProps = (state) => {
   return {
     groups: state.groups,
-    units: state.units
+    units: state.units,
+    authorities: state.authorities,
+    isAdmin: state.isAdmin,
   }
 }
 
-
-@withAuth
 @connect(mapStateToProps)
 export default
 class AddPupil extends React.Component<{}, State> {
@@ -153,32 +154,11 @@ class AddPupil extends React.Component<{}, State> {
   }
 
   async loadAuthorities() {
-
-    const getOptions = {
-      source: 'server'
-    }
-
-    try {
-
-      const authorities = await firebase.firestore().collection('authorities')
-                               .get(getOptions);
-      const authoritiesDocs = authorities.docs;
-      const _authorities = authoritiesDocs.map( doc => {
-        const docData = doc.data();
-        return {
-          name: docData.name,
-          region: docData.region
-        }
-      });
-
       this.setState({
-        authorities: _authorities,
+        authorities: this.props.authorities,
         authoritiesLoaded: true
       })
 
-    } catch( err ) {
-      return new Error(err);
-    }
 
   }
 
@@ -189,7 +169,7 @@ class AddPupil extends React.Component<{}, State> {
 
       const _units = [];
 
-      const units = database.getAllUnits();
+      const units = this.props.units;
 
       units.forEach( (unit) => {
         const unitData = unit;
@@ -200,7 +180,7 @@ class AddPupil extends React.Component<{}, State> {
         });
       })
 
-      const _groups = database.getAllGroups();
+      const _groups = this.props.groups;
 
       self.setState({
         units: _units,
