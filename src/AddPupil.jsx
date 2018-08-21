@@ -231,10 +231,10 @@ class AddPupil extends React.Component<{}, State> {
         };
 
       if( pupilId != 0 ) {
-         pupil = getPupilById(pupilId);
-         pupil.birthDay = moment.unix(pupilData.birthDay.seconds).format('DD/MM/YYYY');
+         pupil = database.getPupilById(pupilId);
+         //pupil.birthDay = moment.unix(pupilData.birthDay.seconds).format('DD/MM/YYYY');
 
-        let componnentHeader = "עריכת פרטי תלמיד: " + this.state.pupil.name + " " + this.state.pupil.lastName;
+        let componnentHeader = "עריכת פרטי תלמיד: " + pupil.name + " " + pupil.lastName;
 
         this.setState({
           pupil: pupil,
