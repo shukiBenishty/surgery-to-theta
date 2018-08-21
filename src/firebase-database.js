@@ -1,11 +1,9 @@
 import firebase from './firebase.js';
 import {store} from './index.jsx';
+import moment from 'moment';
 
-let initMode = true;
 const unitsRef = firebase.firestore().collection('units');
 const authoritiesRef = firebase.firestore().collection('authorities');
-const groupsRefs =[];
-const pupilsRefs =[];
 const usersRef = firebase.firestore().collection('users')
 
 var authorities = {};
@@ -36,8 +34,8 @@ const initAuthorities = () => {
 
 exports.initDatabase =  () => {
   try {
-     unitsRef.onSnapshot(async _units => {
-      await _units.docChanges().forEach( (unit) => {
+     unitsRef.onSnapshot( _units => {
+       _units.docChanges().forEach( (unit) => {
         if (unit.type === "removed") {
           delete units[unit.doc.id];
         }
@@ -50,6 +48,7 @@ exports.initDatabase =  () => {
           const unitSymbol = unitData.symbol;
           const authority = unitData.authority;
           unitData.unitId = unitId;
+          unitData.unitName = unitName;
           let __groups = [];
           if (unit.type === "modified") {
             __groups = units[unitId].groups;
@@ -59,7 +58,7 @@ exports.initDatabase =  () => {
           if (unit.type === "added") {
              unitsRef.doc(unitId).collection('groups')
               .onSnapshot( _groups => {
-                 _groups.docChanges().forEach(async (group) => {
+                 _groups.docChanges().forEach( (group) => {
                   if (group.type === "removed") {
                     delete groups[group.doc.id];
                   }
@@ -73,8 +72,11 @@ exports.initDatabase =  () => {
                       __pupils = groups[groupId].pupils;
                     }
                     groupData.unitId = unitId;
+                    groupData.groupName = groupName;
                     groupData.unitName = unitName;
                     groupData.groupId = groupId;
+                    groupData.openTill = groupData.openTill ? moment.unix(groupData.openTill.seconds).format('DD/MM/YYYY') : '';
+                    groupData.openFrom = groupData.openFrom ? moment.unix(groupData.openFrom.seconds).format('DD/MM/YYYY') : '';
                     groupData.pupils = __pupils;
                     groups[groupId] = groupData;
                     if (group.type === "added") {
@@ -99,6 +101,7 @@ exports.initDatabase =  () => {
                               pupilData.unitId = unitId;
                               pupilData.unitName = unitName;
                               pupilData.authority = authority;
+                              pupilData.birthDay = pupilData.birthDay ? moment.unix(pupilData.birthDay.seconds).format('DD/MM/YYYY') : '';
                               pupilData.groupName = groupName;
                               pupils[id]  = pupilData;
 

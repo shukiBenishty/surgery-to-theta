@@ -89,13 +89,13 @@ class UnitGroups extends React.Component<Props, State> {
 
         let _isClosed = data.isClosed;
 
-        let _openDate= ( data.openFrom ) ?
-                      moment.unix(data.openFrom.seconds).format('DD/MM/YYYY') :
-                      '<none>';
+        // let _openDate= ( data.openFrom ) ?
+        //               moment.unix(data.openFrom.seconds).format('DD/MM/YYYY') :
+        //               '<none>';
 
-        let _openTillDate = ( data.openTill ) ?
-                        moment.unix(data.openTill.seconds).format('DD/MM/YYYY') :
-                        '<none>';
+        // let _openTillDate = ( data.openTill ) ?
+        //                 moment.unix(data.openTill.seconds).format('DD/MM/YYYY') :
+        //                 '<none>';
 
         let registeredPupils = ( data.registeredPupils ) ? data.registeredPupils : 0;
 
@@ -103,8 +103,8 @@ class UnitGroups extends React.Component<Props, State> {
           id: group.groupId,
           name: data.name,
           symbol: data.symbol,
-          openFrom: _openDate,
-          openTill: _openTillDate,
+          openFrom: group.openFrom,
+          openTill: group.openTill,
           isClosed: _isClosed,
           price: data.price + ' ₪',
           capacity: data.capacity,

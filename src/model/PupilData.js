@@ -33,15 +33,15 @@ class Pupil {
     this.id = ( id || '');
     this.phoneNumber = ( phoneNumber || '');
     this.medicalLimitations = medicalLimitations;
-    this.birthDay = ( birthDay ) ?
+    this.birthDay = ( birthDay || birthDay.seconds) ?
                           moment.unix(birthDay.seconds).format('DD/MM/YYYY') :
-                          null;
+                          birthDay;
 
-    this.whenRegistered = ( whenRegistered ) ?
+    this.whenRegistered = ( whenRegistered || whenRegistered.seconds) ?
                           moment.unix(whenRegistered.seconds)
                           .utcOffset(0)
                           .format('DD/MM/YYYY HH:mm') :
-                          null;
+                          whenRegistered;
     this.parentId = ( parentId || '');
     this.address = ( address ||  '');
     this.isAdmin = isAdmin;

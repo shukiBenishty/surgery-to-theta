@@ -77,12 +77,15 @@ class Groups extends React.Component<{}, State> {
         
           // const openTill = group.openTill ?
           //                 moment.unix(group.openedTill.seconds).format('DD/MM/YYYY') :
-          //                 '';
+          //     
+
           return {
             id: group.groupId,
             unitId: group.unitId,
             name: group.name,
             symbol: group.symbol,
+            openTill: group.openTill,
+            openFrom: group.openFrom,
             unitName: group.unitName,
             authority: group.authority,
             price: group.price,
@@ -106,10 +109,16 @@ class Groups extends React.Component<{}, State> {
 
     if( prevProps.isAdmin !== this.props.isAdmin ||
         prevProps.groups !== this.props.groups) {
-        ::this.loadAuthorities();
         ::this.loadGroups();
     }
-
+    if (prevProps.authorities !== this.props.authorities){
+      ::this.loadAuthorities();
+    }
+    if(prevState !== this.state){
+      return true;
+    } else {
+      return false;
+    }
   }
 
 

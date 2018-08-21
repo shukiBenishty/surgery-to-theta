@@ -97,7 +97,7 @@ class Pupils extends React.Component<{}, State> {
 
  loadPupils(isAdmin: Boolean) {
     let _pupils = this.props.pupils.map((pupil) => {
-      pupil.birthDay = pupil.birthDay ? moment.unix(pupil.birthDay.seconds).format('DD/MM/YYYY') : '';
+    // pupil.birthDay = pupil.birthDay ? moment.unix(pupil.birthDay.seconds).format('DD/MM/YYYY') : '';
       pupil.isAdmin = isAdmin;
       return pupil
     })
@@ -114,11 +114,25 @@ class Pupils extends React.Component<{}, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
+
     if(prevProps.pupils !== this.props.pupils||
       prevProps.isAdmin !== this.props.isAdmin){
-      this.loadAuthorities();
       this.loadPupils(this.props.isAdmin);
     }
+    if (prevProps.authorities !== this.props.authorities) {
+      this.loadAuthorities();
+    }
+    if (prevProps.units !== this.props.units) {
+      this.setState({
+        units: this.props.units
+      })
+    }
+    if(prevState !== this.state){
+      return true;
+    } else {
+      return false;
+    }
+
   }
 
   renderCheckable(cellInfo) {
@@ -163,6 +177,15 @@ class Pupils extends React.Component<{}, State> {
      database.deletePupilById(this.state.unitId,
                               this.state.groupId,
                               this.state.pupilId2Delete);
+
+    // await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
+    //   // headers: {
+    //   //     "Content-Type": "application/json",
+    //   // },
+    //   mode: 'no-cors', // no-cors prevents reading the response
+    //   method: 'POST',
+    //   body: JSON.stringify(data2post)
+    // });
 
       this.setState({
         modal: !this.state.modal,
@@ -340,8 +363,7 @@ class Pupils extends React.Component<{}, State> {
       selectedUnits: _units
     });
     this.filerPupils(this.state._units, _units)
-    // this.filerPupils(this.state._units, this.state.selectedAuthorities.length, _units , _units.length)
-  }
+   }
 
 
   onAuthorityChanged = (authorities) => {
@@ -349,7 +371,7 @@ class Pupils extends React.Component<{}, State> {
     const _units = ( authorities.length !== 0 ) ?
                     ( this.state.units.filter( unit => {
                         return authorities.find( authority => {
-                          return authority.name === unit.authority}
+                          return authority.name.trim() === unit.authority.trim()}
                         )
                       })) : this.state.units;
 
@@ -369,13 +391,13 @@ class Pupils extends React.Component<{}, State> {
     } else {
         const incision = unitsFromAuthorities.filter( a_unit => {
           return unitsFromUnits.find( u_unit => {
-            return a_unit.unitId === u_unit.unitId}
+            return a_unit.unitId.trim() === u_unit.unitId.trim()}
           )
         });
 
-        const _pupils = this.state.pupils.filter( pupils => {
+        const _pupils = this.state.pupils.filter( pupil => {
           return incision.find( unit => {
-            return unit.unitId === pupils.unitId}
+            return unit.unitId.trim() === pupil.unitId.trim()}
           )
         });
 

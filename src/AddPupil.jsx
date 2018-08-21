@@ -135,7 +135,7 @@ const mapStateToProps = (state) => {
     groups: state.groups,
     units: state.units,
     authorities: state.authorities,
-    isAdmin: state.isAdmin,
+    isAdmin: state.isAdmin
   }
 }
 
@@ -174,7 +174,7 @@ class AddPupil extends React.Component<{}, State> {
       units.forEach( (unit) => {
         const unitData = unit;
         _units.push({
-          unitId:unit.unitId,
+          unitId: unit.unitId,
           unitName: unitData.name_he,
           authority: unitData.authority
         });
@@ -209,7 +209,7 @@ class AddPupil extends React.Component<{}, State> {
   async componentDidMount() {
 
       console.log(this.props);
-      let promises = [];
+
       let unit;
       let group;
       let pupil;
@@ -226,12 +226,14 @@ class AddPupil extends React.Component<{}, State> {
       }
 
       if( unitId != 0 && groupId  != 0 ) {
-          unit = database.getUnitById(unitId);
+          unit = await database.getUnitById(unitId);
           unit.unitName = unit.name_he;
+
+          group = await database.getGroupById(groupId);
         };
 
       if( pupilId != 0 ) {
-         pupil = database.getPupilById(pupilId);
+         pupil = await database.getPupilById(pupilId);
          //pupil.birthDay = moment.unix(pupilData.birthDay.seconds).format('DD/MM/YYYY');
 
         let componnentHeader = "עריכת פרטי תלמיד: " + pupil.name + " " + pupil.lastName;
@@ -295,9 +297,9 @@ class AddPupil extends React.Component<{}, State> {
       parentId: (event.target.parentId.value) ? event.target.parentId.value: undefined ,
       parentName: (event.target.parentName.value) ? event.target.parentName.value: undefined  ,
       phoneNumber: (event.target.phoneNumber.value) ? event.target.phoneNumber.value: undefined ,
-      parentId2: (event.target.parentId2.value) ? event.target.parentId.value: undefined ,
-      parentName2: (event.target.parentName.value) ? event.target.parentName.value: undefined ,
-      phoneNumber2: (event.target.phoneNumber.value) ? event.target.phoneNumber.value: undefined ,
+      parentId2: (event.target.parentId2.value) ? event.target.parentId2.value: undefined ,
+      parentName2: (event.target.parentName2.value) ? event.target.parentName2.value: undefined ,
+      phoneNumber2: (event.target.phoneNumber2.value) ? event.target.phoneNumber2.value: undefined ,
       paymentApprovalNumber: (event.target.paymentApprovalNumber.value) ? event.target.paymentApprovalNumber.value: undefined ,
       receiveNumber: (event.target.paymentTypeCash.checked) ? event.target.receiveNumber.value : undefined ,
       waitingList: (event.target.waitingList.checked)? true : false,

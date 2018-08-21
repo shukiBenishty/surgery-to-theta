@@ -26,6 +26,7 @@ type State = {
 
 const mapStateToProps = (state) => {
   return {
+    groups: state.groups,
     isAdmin: state.isAdmin
   }
 }
@@ -38,8 +39,8 @@ class Group extends React.Component<{}, State> {
     groupData: {
       name: '',
       symbol: '',
-      openFrom: moment(),
-      openTill: moment()
+      openFrom: '____/__/__',
+      openTill: '____/__/__'
     },
     dataStatus: 'טעינת נתונים..',
     tooltipOpen: false,
@@ -50,10 +51,14 @@ class Group extends React.Component<{}, State> {
   componentDidUpdate(prevProps: Props, prevState: State) {
 
     if( prevProps.isAdmin !== this.props.isAdmin ||
-      prevProps !== this.props) {
+      prevProps.groups[this.props.match.params.groupid] !== this.props.groups[this.props.match.params.groupid]) {
       ::this.loadData();
     }
-
+    if(prevState !== this.state){
+      return true;
+    } else {
+      return false;
+    }
   }
 
   async loadData() {
@@ -258,7 +263,7 @@ class Group extends React.Component<{}, State> {
                 <div className='card-header'>
                   <h5 className='title' dir='rtl'>רישום תלמידים לכיתה {this.state.groupData.name} (מזהה {this.state.groupData.symbol}) </h5>
                   <h5 className='title'>קיבולת: {this.state.groupData.capacity} ילדים</h5>
-                  <h5 className='title'>תאריכי פעילות: מ {this.state.groupData.openFrom.format('DD/MM/YYYY')} עד {this.state.groupData.openTill.format('DD/MM/YYYY')}</h5>
+                  <h5 className='title'>תאריכי פעילות: מ {this.state.groupData.openFrom} עד {this.state.groupData.openTill}</h5>
                 </div>
                 <CardBody>
                   <Row className='align-items-center'>
