@@ -335,35 +335,36 @@ exports.updatePupil = functions.firestore
       var promises = [];
       const document = change.after.data();
 
-      const unit =
      promises.push(realTimeDB.ref(`units/${context.params.unitId}`).once('value').then((snapshot) =>  {
-        _unit = snapshot.val();
+        var _unit = snapshot.val();
         return {
          unitName: (_unit && _unit.name_he) || null,
          authority: (_unit && _unit.authority) || null
         }
       }));
-      const group =
+
       promises.push(realTimeDB.ref(`units/${context.params.unitId}/groups/${context.params.groupId}`).once('value').then((snapshot) =>  {
-        _unit = snapshot.val();
+        var _group = snapshot.val();
         return {
-          groupSymbol: (_unit && _unit.name) || null,
-          groupName: (_unit && _unit.symbol) || null
+          groupSymbol: (_group && _group.symbol) || null,
+          groupName: (_group && _group.name) || null
         }
       }));
 
-      updates[`/pupils/${context.params.pupilId}`] = _spread({}, document, {
-                                                      "id": context.params.pupilId,
-                                                      "groupId": context.params.groupId,
-                                                      "unitName": _res[0].unitName,
-                                                      "authority": _res[0].authority,
-                                                      "groupSymbol": _res[0].groupSymbol,
-                                                      "groupName": _res[0].groupName,
-                                                      "unitId": context.params.unitId,
-                                                      "birthDay": document.birthDay && document.birthDay.seconds ? moment.unix(document.birthDay.seconds).format('DD/MM/YYYY') : '',
-                                                      "whenRegistered": snap.whenRegistered && snap.whenRegistered.seconds ? moment.unix(snap.whenRegistered.seconds).format('DD/MM/YYYY') : ''
-                                                      });
-        return Promise.all(promises).then(() => {return realTimeDB.ref().update(updates)});
+      return Promise.all(promises).then((val) => {
+        updates[`/pupils/${context.params.pupilId}`] = _spread({}, document, {
+                                                        "id": context.params.pupilId,
+                                                        "groupId": context.params.groupId,
+                                                        "unitName": val[0].unitName,
+                                                        "authority": val[0].authority,
+                                                        "groupSymbol": val[1].groupSymbol,
+                                                        "groupName": val[1].groupName,
+                                                        "unitId": context.params.unitId,
+                                                        "birthDay": document.birthDay && document.birthDay.seconds ? moment.unix(document.birthDay.seconds).format('DD/MM/YYYY') : '',
+                                                        "whenRegistered": document.whenRegistered && document.whenRegistered.seconds ? moment.unix(document.whenRegistered.seconds).format('DD/MM/YYYY') : ''
+                                                        });
+        return realTimeDB.ref().update(updates)
+      });
     });
 
 function getUnits(req, res) {
