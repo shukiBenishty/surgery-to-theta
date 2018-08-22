@@ -24,6 +24,20 @@ app.use(bodyParser.json({
 }));
 
 
+///for spread (...obj)
+var _spread =
+  Object.assign ||
+  function(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
 
 app.get('/groups', (req, res) => {
   return getGroups(req, res)
@@ -296,12 +310,11 @@ exports.unregisterPupil  = functions.firestore
     updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = {
                                                               "pupilId": context.params.pupilId,
                                                               };
-    updates[`/pupils/${context.params.pupilId}`] = {
-                                                    ...snap,
+    updates[`/pupils/${context.params.pupilId}`] = _spread({}, snap, {
                                                     "id": context.params.pupilId,
                                                     "groupId": context.params.groupId,
                                                     "unitId": context.params.unitId,
-                                                    };
+                                                    });
     promises.push(realTimeDB.update(updates));
 
     return Promise.all(promises);
@@ -311,13 +324,14 @@ exports.updatePupil = functions.firestore
     .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
     .onUpdate((change, context) => {
       console.log(`onUpdate  ${context.params.pupilId}`);
+      
+      const document = change.after.data();
 
-      updates[`/pupils/${context.params.pupilId}`] = {
-                                                      ...document,
+      updates[`/pupils/${context.params.pupilId}`] = _spread({}, document, {
                                                       "id": context.params.pupilId,
                                                       "groupId": context.params.groupId,
                                                       "unitId": context.params.unitId,
-                                                      };
+                                                      });
       return realTimeDB.update(updates);
     });
 
