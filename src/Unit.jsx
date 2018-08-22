@@ -29,9 +29,15 @@ type Props = {
   docId: String
 }
 
+const mapStateToProps = (state) => {
+  return {
+    isAdmin: state.isAdmin
+  }
+}
+
 
 @withRouter
-@connect()
+@connect(mapStateToProps)
 export default
 class Unit extends React.Component<Props, State> {
 

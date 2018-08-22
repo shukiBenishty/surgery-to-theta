@@ -33,11 +33,11 @@ class Pupil {
     this.id = ( id || '');
     this.phoneNumber = ( phoneNumber || '');
     this.medicalLimitations = medicalLimitations;
-    this.birthDay = ( birthDay || birthDay.seconds) ?
+    this.birthDay = ( birthDay && birthDay.seconds) ?
                           moment.unix(birthDay.seconds).format('DD/MM/YYYY') :
                           birthDay;
 
-    this.whenRegistered = ( whenRegistered || whenRegistered.seconds) ?
+    this.whenRegistered = ( whenRegistered && whenRegistered.seconds) ?
                           moment.unix(whenRegistered.seconds)
                           .utcOffset(0)
                           .format('DD/MM/YYYY HH:mm') :

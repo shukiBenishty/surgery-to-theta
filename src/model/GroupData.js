@@ -21,8 +21,8 @@ class GroupData {
     this.symbol = ( symbol || '');
     this.capacity = ( capacity || 0);
     this.price = ( price || '');
-    this.openFrom = ( openFrom || openFrom.seconds)? moment.unix(openFrom.seconds): openFrom;
-    this.openTill = ( openTill || openTill.seconds)? moment.unix(openTill.seconds): openTill;
+    this.openFrom = ( openFrom && openFrom.seconds)? moment.unix(openFrom.seconds): openFrom;
+    this.openTill = ( openTill && openTill.seconds)? moment.unix(openTill.seconds): openTill;
     this.payments =  ( payments || 0);
   }
 }

@@ -219,7 +219,7 @@ class AddPupil extends React.Component<{}, State> {
       const groupId = this.props.match.params.groupid;
       const pupilId = this.props.match.params.pupilid;
 
-      if( unitId != 0 ) {
+      if( pupilId != 0 ) {
         this.setState({componnentHeader: "עריכת פרטי תלמיד"})
       } else {
         this.setState({componnentHeader: "הוספת תלמיד"})
@@ -261,7 +261,7 @@ class AddPupil extends React.Component<{}, State> {
             selectedAuthority: (unit) ? unit.authority : 'אנא בחר רשות' ,
             selectedUnit: (unit) ? unit : 'אנא בחר מוסד' ,
             selectedGroup: (group) ? group :'אנא בחר כיתה' ,
-            disabledAuthority: false,
+            disabledAuthority: true,
             disabledUnit: true,
             disabledGroup: true,
             formInalid: false,
@@ -423,8 +423,9 @@ class AddPupil extends React.Component<{}, State> {
     });
 
     this.state.pupil.authority = authority.name;
+      // disabledUnit: false,
     this.setState({
-      disabledUnit: false,
+
       filterdUnits: _units,
       filterdGroups: _groups,
       selectedAuthority: authority,
@@ -443,7 +444,7 @@ class AddPupil extends React.Component<{}, State> {
     this.state.pupil.unitId = unit.unitId;
     this.state.pupil.unitName = unit.unitName;
     this.setState({
-      disabledGroup: false,
+      disabledGroup: (this.state.componentState === 'edit') ? false : true,
       filterdGroups: _groups,
       selectedUnit: unit,
       selectedGroup: 'אנא בחר כיתה',

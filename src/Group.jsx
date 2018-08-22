@@ -48,20 +48,22 @@ class Group extends React.Component<{}, State> {
     pupilId2Delete: ''
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
+  shouldComponentUpdate(nextProps, nextState) {
 
-    if( prevProps.isAdmin !== this.props.isAdmin ||
-      prevProps.groups[this.props.match.params.groupid] !== this.props.groups[this.props.match.params.groupid]) {
-      ::this.loadData();
+    if( nextProps.isAdmin !== this.props.isAdmin ||
+      nextProps.groups[this.props.match.params.groupid] !== this.props.groups[this.props.match.params.groupid]) {
+      ::this.loadData(nextProps.isAdmin);
     }
-    if(prevState !== this.state){
+    if(nextState !== this.state){
       return true;
     } else {
       return false;
     }
   }
-
-  async loadData() {
+  componentWillMount() {
+      ::this.loadData(this.props.isAdmin);
+  }
+  async loadData(isAdmin) {
 
     const groupId = this.props.match.params.groupid;
     const unitId = this.props.match.params.unitid;
@@ -69,7 +71,9 @@ class Group extends React.Component<{}, State> {
     try {
 
       let data = database.getGroupById(groupId);
-
+      if (!data) {
+        return;
+      }
       const _groupData = new GroupData(data.name,
                                         data.symbol,
                                         data.capacity,
@@ -81,7 +85,6 @@ class Group extends React.Component<{}, State> {
         groupData: _groupData
       })
 
-      const isAdmin = this.props.isAdmin;
       const _pupils = database.getAllPupilsInGroup(groupId);
       ::this.pupilsFromDocs(_pupils, isAdmin);
 

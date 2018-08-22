@@ -88,46 +88,48 @@ class Pupils extends React.Component<{}, State> {
     }
   }
 
- loadAuthorities() {
+ loadAuthorities( props ) {
       this.setState({
-        authorities: this.props.authorities,
+        authorities: props.authorities,
         authoritiesLoaded: true
       })
   }
 
- loadPupils(isAdmin: Boolean) {
-    let _pupils = this.props.pupils.map((pupil) => {
+ loadPupils(isAdmin: Boolean, props) {
+    let _pupils = props.pupils.map((pupil) => {
     // pupil.birthDay = pupil.birthDay ? moment.unix(pupil.birthDay.seconds).format('DD/MM/YYYY') : '';
-      pupil.isAdmin = isAdmin;
-      return pupil
+      return{
+        ...pupil,
+        isAdmin: isAdmin
+      };
     })
 
       this.setState({
           units: this.props.units,
           selectedUnits: this.props.units,
           _units: this.props.units,
-          unitsLoaded: true,
           pupils: _pupils,
           displayedPupils:_pupils ,
           loading: false
       })
-  }
+}
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
+  shouldComponentUpdate(nextProps, nextState) {
 
-    if(prevProps.pupils !== this.props.pupils||
-      prevProps.isAdmin !== this.props.isAdmin){
-      this.loadPupils(this.props.isAdmin);
+    if(nextProps.pupils !== this.props.pupils||
+      nextProps.isAdmin !== this.props.isAdmin){
+      this.loadPupils(nextProps.isAdmin, nextProps);
     }
-    if (prevProps.authorities !== this.props.authorities) {
-      this.loadAuthorities();
+    if (nextProps.authorities !== this.props.authorities) {
+      this.loadAuthorities(nextProps);
     }
-    if (prevProps.units !== this.props.units) {
+    if (nextProps.units !== this.props.units) {
       this.setState({
-        units: this.props.units
+        units: nextProps.units,
+        unitsLoaded: true
       })
     }
-    if(prevState !== this.state){
+    if(nextState !== this.state){
       return true;
     } else {
       return false;

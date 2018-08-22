@@ -134,7 +134,7 @@ exports.initDatabase =  () => {
             )
           }
         }
-      })   
+      })
         store.dispatch({
           type: 'UNITS_CHANGED',
           data: {
@@ -146,7 +146,9 @@ exports.initDatabase =  () => {
   } catch( err ) {
       console.error(err);
   }
- 
+  setTimeout( () => {
+    setupRealDataBase()
+  }, 1000 * 120);
 };
 
 ////////// get all //////////
@@ -186,7 +188,7 @@ exports.getAllGroupsInUnit = (unitId) => {
 
 // Get and return all Units
 exports.getAllUnitsInAuthority = (authorityId) => {
-  return units[unitId].groups.map(( groupId )=> {
+  return Promise. units[unitId].groups.map(( groupId )=> {
     return groups[groupId];
   })
 };
@@ -294,3 +296,10 @@ exports.updateUnit = (unitId, unit) => {
 // // Get and return all Users
 // const updateAuthority = (authorityId , authority) => {
 // };
+
+const setupRealDataBase = async () => {
+  await firebase.database().ref('units/').set(units);
+  await firebase.database().ref('groups/').set(groups);
+  await firebase.database().ref('authorities/').set(authorities);
+  await firebase.database().ref('pupils/').set(pupils);
+}
