@@ -343,7 +343,7 @@ exports.updatePupil = functions.firestore
         }
       }));
 
-      promises.push(realTimeDB.ref(`units/${context.params.unitId}/groups/${context.params.groupId}`).once('value').then((snapshot) =>  {
+      promises.push(realTimeDB.ref(`groups/${context.params.groupId}`).once('value').then((snapshot) =>  {
         var _group = snapshot.val();
         return {
           groupSymbol: (_group && _group.symbol) || null,
