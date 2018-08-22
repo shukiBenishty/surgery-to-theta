@@ -274,9 +274,9 @@ exports.unregisterPupil  = functions.firestore
                 }));
       updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = null;
       updates[`/pupils/${context.params.pupilId}`] = null;
-      
+
       promises.push(realTimeDB.ref().update(updates));
-  
+
       return Promise.all(promises);
     })
 
@@ -284,7 +284,7 @@ exports.unregisterPupil  = functions.firestore
   .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
   .onCreate( (snap, context) => {
     console.log(`onCreate  ${context.params.pupilId}`);
-   
+
     let promises = [];
     var updates = {};
     const doc = firestore.doc(`units/${context.params.unitId}/groups/${context.params.groupId}`);
@@ -306,6 +306,7 @@ exports.unregisterPupil  = functions.firestore
               .then( res => {
                 const _json = JSON.stringify(res);
                 console.log(`Update result: ${_json}`);
+                return true;
               }).catch( err => {
                   console.error(`Error catched ${err.message}`);
               }));
@@ -316,6 +317,9 @@ exports.unregisterPupil  = functions.firestore
                                                     "id": context.params.pupilId,
                                                     "groupId": context.params.groupId,
                                                     "unitId": context.params.unitId,
+                                                    "birthDay": snap.birthDay && snap.birthDay.seconds ? moment.unix(snap.birthDay.seconds).format('DD/MM/YYYY') : '',
+                                                    "whenRegistered": snap.whenRegistered && snap.whenRegistered.seconds ? moment.unix(snap.whenRegistered.seconds).format('DD/MM/YYYY') : ''
+
                                                     });
     promises.push(realTimeDB.ref().update(updates));
 
@@ -326,7 +330,7 @@ exports.updatePupil = functions.firestore
     .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
     .onUpdate((change, context) => {
       console.log(`onUpdate  ${context.params.pupilId}`);
-      
+
       var updates = {};
       const document = change.after.data();
 
@@ -349,6 +353,8 @@ exports.updatePupil = functions.firestore
                                                       "id": context.params.pupilId,
                                                       "groupId": context.params.groupId,
                                                       "unitId": context.params.unitId,
+                                                      "birthDay": document.birthDay && document.birthDay.seconds ? moment.unix(document.birthDay.seconds).format('DD/MM/YYYY') : '',
+                                                      "whenRegistered": snap.whenRegistered && snap.whenRegistered.seconds ? moment.unix(snap.whenRegistered.seconds).format('DD/MM/YYYY') : ''
                                                       });
       return realTimeDB.ref().update(updates);
     });
