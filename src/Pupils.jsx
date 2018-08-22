@@ -50,6 +50,7 @@ type State = {
 const mapStateToProps = (state) => {
   return {
     units: state.units,
+    groups: state.groups,
     authorities: state.authorities,
     pupils: state.pupils,
     isAdmin: state.isAdmin,
@@ -100,6 +101,7 @@ class Pupils extends React.Component<{}, State> {
     // pupil.birthDay = pupil.birthDay ? moment.unix(pupil.birthDay.seconds).format('DD/MM/YYYY') : '';
       return{
         ...pupil,
+        groupSymbol: (this.state.groups ) ? this.state.groups[pupil.groupId] : '' ,
         isAdmin: isAdmin
       };
     })
@@ -114,6 +116,17 @@ class Pupils extends React.Component<{}, State> {
       })
 }
 
+  componentDidMount(){
+    this.loadPupils(this.props.isAdmin, this.props);
+    this.loadGroups(this.props);
+    this.loadAuthorities(this.props);
+    this.setState({
+      units: this.props.units,
+      groups: this.props.groups,
+      unitsLoaded: true
+    })
+  }
+
   shouldComponentUpdate(nextProps, nextState) {
 
     if(nextProps.pupils !== this.props.pupils||
@@ -127,6 +140,11 @@ class Pupils extends React.Component<{}, State> {
       this.setState({
         units: nextProps.units,
         unitsLoaded: true
+      })
+    }
+    if (nextProps.groups !== this.props.groups) {
+      this.setState({
+        groups: nextProps.groups
       })
     }
     if(nextState !== this.state){
