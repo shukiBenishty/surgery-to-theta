@@ -83,7 +83,7 @@ app.post('/pupil', (req, res) => {
   var groupSymbol = req.body.groupSymbol;
   var secret = req.query.secret;
 
-  if( secret == 'undefined' ) {
+  if( secret === 'undefined' ) {
     console.log( `Not authorized. Provide 'secret' parameter in url`);
     return res.status(401)
            .json({
@@ -267,15 +267,16 @@ exports.unregisterPupil  = functions.firestore
                   })
                   .then( res => {
                     console.log(`RegisteredPupils=${value}`);
+                    return true;
                   })
                 }).catch( err => {
                     console.error(`Error catched ${err.message}`);
                 }));
       updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = null;
       updates[`/pupils/${context.params.pupilId}`] = null;
-      
+
       promises.push(realTimeDB.update(updates));
-  
+
       return Promise.all(promises);
     })
 
@@ -283,7 +284,7 @@ exports.unregisterPupil  = functions.firestore
   .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
   .onCreate( (snap, context) => {
     console.log(`onCreate  ${context.params.pupilId}`);
-   
+
     let promises = [];
     var updates = {};
     const doc = firestore.doc(`units/${context.params.unitId}/groups/${context.params.groupId}`);
@@ -299,11 +300,13 @@ exports.unregisterPupil  = functions.firestore
                   })
                   .then( res => {
                     console.log(`RegisteredPupils=${docData.registeredPupils}`);
+                    return true;
                   })
               })
               .then( res => {
                 const _json = JSON.stringify(res);
                 console.log(`Update result: ${_json}`);
+                return true;
               }).catch( err => {
                   console.error(`Error catched ${err.message}`);
               }));
@@ -324,7 +327,8 @@ exports.updatePupil = functions.firestore
     .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
     .onUpdate((change, context) => {
       console.log(`onUpdate  ${context.params.pupilId}`);
-      
+
+      var updates = {};
       const document = change.after.data();
 
       updates[`/pupils/${context.params.pupilId}`] = _spread({}, document, {
