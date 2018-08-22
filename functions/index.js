@@ -8,20 +8,22 @@ var Validator = require('jsonschema').Validator;
 admin.initializeApp();
 const firestore = admin.firestore();
 
+const realTimeDB = admin.database().ref();
+
+
 const express = require('express');
-// const cookieParser = require('cookie-parser')();
+
 var bodyParser = require('body-parser');
 const cors = require('cors')({origin: true});
 
 const app = express();
 app.use(cors);
- // Enforces 406 (Not Acceptable) for Content-Type different from 'application-json'
+
 app.use(bodyParser.json({
   strict:false
 }));
 
-// Uncomment for parsing application/x-www-form-urlencoded
-//app.use(bodyParser.urlencoded({ extended: true }));
+
 
 app.get('/groups', (req, res) => {
   return getGroups(req, res)
@@ -231,64 +233,93 @@ exports.units = functions.https.onRequest((req, res) => {
 
 });
 
+
 exports.unregisterPupil  = functions.firestore
     .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
     .onDelete((snap, context) => {
+      console.log(`onDelete PupilId: ${context.params.pupilId}`);
 
-      console.log('onDelete');
-
+      let promises = [];
+      var updates = {};
       const doc = firestore.doc(`units/${context.params.unitId}/groups/${context.params.groupId}`);
-      doc.get()
-      .then( _doc => {
-         const docData = _doc.data();
 
-         const value = docData.registeredPupils - 1;
-         return doc.update({
-           registeredPupils: value
-         })
-         .then( res => {
-           console.log(`RegisteredPupils=${value}`);
-         })
-      }).catch( err => {
-          console.error(`Error catched ${err.message}`);
-      })
+      promises.push(doc.get()
+                .then( _doc => {
+                  const docData = _doc.data();
 
-      return true;
-
+                  const value = docData.registeredPupils - 1;
+                  return doc.update({
+                    registeredPupils: value
+                  })
+                  .then( res => {
+                    console.log(`RegisteredPupils=${value}`);
+                  })
+                }).catch( err => {
+                    console.error(`Error catched ${err.message}`);
+                }));
+      updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = null;
+      updates[`/pupils/${context.params.pupilId}`] = null;
+      
+      promises.push(realTimeDB.update(updates));
+  
+      return Promise.all(promises);
     })
 
-exports.registerPupil = functions.firestore
+  exports.registerPupil = functions.firestore
   .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
   .onCreate( (snap, context) => {
-     //const newDoc = snap.data();
+    console.log(`onCreate  ${context.params.pupilId}`);
+   
+    let promises = [];
+    var updates = {};
+    const doc = firestore.doc(`units/${context.params.unitId}/groups/${context.params.groupId}`);
 
-     // console.log(`UnitId: ${context.params.unitId}`);
-     // console.log(`GroupId: ${context.params.groupId}`);
-     console.log(`onCreate PupilId: ${context.params.pupilId}`);
+    promises.push(doc.get()
+              .then( _doc => {
+                  const docData = _doc.data();
 
-     const doc = firestore.doc(`units/${context.params.unitId}/groups/${context.params.groupId}`);
-     doc.get()
-     .then( _doc => {
-        const docData = _doc.data();
+                  const value = docData.registeredPupils + 1;
 
-        const value = docData.registeredPupils + 1;
+                  return doc.update({
+                    registeredPupils: value
+                  })
+                  .then( res => {
+                    console.log(`RegisteredPupils=${docData.registeredPupils}`);
+                  })
+              })
+              .then( res => {
+                const _json = JSON.stringify(res);
+                console.log(`Update result: ${_json}`);
+              }).catch( err => {
+                  console.error(`Error catched ${err.message}`);
+              }));
+    updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = {
+                                                              "pupilId": context.params.pupilId,
+                                                              };
+    updates[`/pupils/${context.params.pupilId}`] = {
+                                                    ...snap,
+                                                    "id": context.params.pupilId,
+                                                    "groupId": context.params.groupId,
+                                                    "unitId": context.params.unitId,
+                                                    };
+    promises.push(realTimeDB.update(updates));
 
-        return doc.update({
-          registeredPupils: value
-        })
-        .then( res => {
-          console.log(`RegisteredPupils=${docData.registeredPupils}`);
-        })
-     })
-     .then( res => {
-      const _json = JSON.stringify(res);
-       console.log(`Update result: ${_json}`);
-     }).catch( err => {
-         console.error(`Error catched ${err.message}`);
-     })
-
-     return true;
+    return Promise.all(promises);
   })
+
+exports.updatePupil = functions.firestore
+    .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
+    .onUpdate((change, context) => {
+      console.log(`onUpdate  ${context.params.pupilId}`);
+
+      updates[`/pupils/${context.params.pupilId}`] = {
+                                                      ...document,
+                                                      "id": context.params.pupilId,
+                                                      "groupId": context.params.groupId,
+                                                      "unitId": context.params.unitId,
+                                                      };
+      return realTimeDB.update(updates);
+    });
 
 function getUnits(req, res) {
 
