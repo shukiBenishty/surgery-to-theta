@@ -282,7 +282,7 @@ exports.unregisterPupil  = functions.firestore
 
   exports.registerPupil = functions.firestore
   .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
-  .onCreate( (snap, context) => {
+  .onCreate( (document, context) => {
     console.log(`onCreate  ${context.params.pupilId}`);
 
     let promises = [];
@@ -310,20 +310,37 @@ exports.unregisterPupil  = functions.firestore
               }).catch( err => {
                   console.error(`Error catched ${err.message}`);
               }));
-    updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = {
-                                                              "pupilId": context.params.pupilId,
-                                                              };
-    updates[`/pupils/${context.params.pupilId}`] = _spread({}, snap, {
-                                                    "id": context.params.pupilId,
-                                                    "groupId": context.params.groupId,
-                                                    "unitId": context.params.unitId,
-                                                    "birthDay": snap.birthDay && snap.birthDay.seconds ? moment.unix(snap.birthDay.seconds).format('DD/MM/YYYY') : '',
-                                                    "whenRegistered": snap.whenRegistered && snap.whenRegistered.seconds ? moment.unix(snap.whenRegistered.seconds).format('DD/MM/YYYY') : ''
 
-                                                    });
-    promises.push(realTimeDB.ref().update(updates));
+    promises.push(realTimeDB.ref(`units/${context.params.unitId}`).once('value').then((snapshot) =>  {
+      var _unit = snapshot.val();
+      return {
+       unitName: (_unit && _unit.name_he) || null,
+       authority: (_unit && _unit.authority) || null
+      }
+    }));
 
-    return Promise.all(promises);
+    // promises.push(realTimeDB.ref(`groups/${context.params.groupId}`).once('value').then((snapshot) =>  {
+    //   var _group = snapshot.val();
+    //   return {
+    //     groupSymbol: (_group && _group.symbol) || null,
+    //     groupName: (_group && _group.name) || null
+    //   }
+    // }));
+
+    return Promise.all(promises).then((val) => {
+      updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = {
+        "pupilId": context.params.pupilId,
+        };
+      updates[`/pupils/${context.params.pupilId}`] = _spread({}, document, {
+                                                      "id": context.params.pupilId,
+                                                      "groupId": context.params.groupId,
+                                                      "authority": val[0].authority,
+                                                      "unitId": context.params.unitId,
+                                                      "birthDay": document.birthDay && document.birthDay.seconds ? moment.unix(document.birthDay.seconds).format('DD/MM/YYYY') : '',
+                                                      "whenRegistered": document.whenRegistered && document.whenRegistered.seconds ? moment.unix(document.whenRegistered.seconds).format('DD/MM/YYYY HH:mm:ss') : ''
+                                                      });
+      return realTimeDB.ref().update(updates)
+    });
   })
 
 exports.updatePupil = functions.firestore
@@ -343,25 +360,22 @@ exports.updatePupil = functions.firestore
         }
       }));
 
-      promises.push(realTimeDB.ref(`groups/${context.params.groupId}`).once('value').then((snapshot) =>  {
-        var _group = snapshot.val();
-        return {
-          groupSymbol: (_group && _group.symbol) || null,
-          groupName: (_group && _group.name) || null
-        }
-      }));
+      // promises.push(realTimeDB.ref(`groups/${context.params.groupId}`).once('value').then((snapshot) =>  {
+      //   var _group = snapshot.val();
+      //   return {
+      //     groupSymbol: (_group && _group.symbol) || null,
+      //     groupName: (_group && _group.name) || null
+      //   }
+      // }));
 
       return Promise.all(promises).then((val) => {
         updates[`/pupils/${context.params.pupilId}`] = _spread({}, document, {
                                                         "id": context.params.pupilId,
                                                         "groupId": context.params.groupId,
-                                                        "unitName": val[0].unitName,
                                                         "authority": val[0].authority,
-                                                        "groupSymbol": val[1].groupSymbol,
-                                                        "groupName": val[1].groupName,
                                                         "unitId": context.params.unitId,
                                                         "birthDay": document.birthDay && document.birthDay.seconds ? moment.unix(document.birthDay.seconds).format('DD/MM/YYYY') : '',
-                                                        "whenRegistered": document.whenRegistered && document.whenRegistered.seconds ? moment.unix(document.whenRegistered.seconds).format('DD/MM/YYYY') : ''
+                                                        "whenRegistered": document.whenRegistered && document.whenRegistered.seconds ? moment.unix(document.whenRegistered.seconds).format('DD/MM/YYYY HH:mm:ss') : ''
                                                         });
         return realTimeDB.ref().update(updates)
       });
