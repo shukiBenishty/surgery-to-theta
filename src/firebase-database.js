@@ -20,6 +20,16 @@ var pupils = {};
 var users = {};
 
 
+const trimObjectProperties = (objectToTrim) => {
+    for (var key in objectToTrim) {
+        if (objectToTrim[key].constructor && objectToTrim[key].constructor == Object)
+            trimObjectProperties(objectToTrim[key]);
+        else if (objectToTrim[key].trim)
+            objectToTrim[key] = objectToTrim[key].trim();
+    }
+}
+
+
 // const initAuthorities = () => {
 //   authoritiesRef.onSnapshot( _authorities => {
 //       _authorities.docChanges().forEach((authority) => {
@@ -34,6 +44,26 @@ var users = {};
 //         type: 'AUTHORITIES_CHANGED',
 //         data: {
 //           authorities: Object.values(authorities)
+//         }
+//       });
+//   })
+// }
+//
+// const initUsers = () => {
+//   usersRef.onSnapshot( _users => {
+//       _users.docChanges().forEach((user) => {
+//         if (user.type === "removed") {
+//           delete users[user.doc.id];
+//         }
+//         else {
+//           users[user.doc.id] = user.doc.data();
+//           users[user.doc.id].userId = user.doc.id;
+//         }
+//       })
+//       store.dispatch({
+//         type: 'AUTHORITIES_CHANGED',
+//         data: {
+//           users: Object.values(users)
 //         }
 //       });
 //   })
@@ -78,6 +108,15 @@ exports.initDatabase =  () => {
         }
       });
     }));
+    promises.push(_usersRef.on('value', (snapshot) => {
+      users = snapshot.val();
+      store.dispatch({
+        type: 'USERS_CHANGED',
+        data: {
+          users: Object.values(users)
+        }
+      });
+    }));
 
     Promise.all(promises);
   } catch( err ) {
@@ -95,7 +134,7 @@ exports.initDatabase =  () => {
 //         }
 //         else {
 //           let unitData = unit.doc.data();
-
+//
 //           const unitId = unit.doc.id;
 //           const unitName = unitData.name_he;
 //           const authority = unitData.authority;
@@ -130,7 +169,7 @@ exports.initDatabase =  () => {
 //                     groupData.groupId = groupId;
 //                     groupData.openTill = groupData.openTill ? moment.unix(groupData.openTill.seconds).format('DD/MM/YYYY') : '';
 //                     groupData.openFrom = groupData.openFrom ? moment.unix(groupData.openFrom.seconds).format('DD/MM/YYYY') : '';
-
+//
 //                     groups[groupId] = groupData;
 //                     if (group.type === "added") {
 //                       units[unitId].groups[groupId] = { groupId };
@@ -144,10 +183,10 @@ exports.initDatabase =  () => {
 //                               delete groups[groupId].pupils[pupil.doc.id];
 //                             }
 //                             else {
-
+//
 //                               const pupilData = pupil.doc.data();
 //                               const id = pupil.doc.id;
-
+//
 //                               pupilData.id = id;
 //                               pupilData.groupId = groupId;
 //                               pupilData.unitId = unitId;
@@ -155,21 +194,21 @@ exports.initDatabase =  () => {
 //                               pupilData.birthDay = pupilData.birthDay ? moment.unix(pupilData.birthDay.seconds).format('DD/MM/YYYY') : '';
 //                               pupilData.whenRegistered = pupilData.whenRegistered ? moment.unix(pupilData.whenRegistered.seconds).format('DD/MM/YYYY HH:mm:ss') : ''
 //                               pupils[id]  = pupilData;
-
+//
 //                               if (pupil.type === "added") {
 //                                 groups[groupId].pupils[id] = { "pupilId": id }
 //                               }
-
+//
 //                           }
 //                         })
-
+//
 //                           store.dispatch({
 //                             type: 'PUPILS_CHANGED',
 //                             data: {
 //                               pupils: Object.values(pupils)
 //                             }
 //                           });
-
+//
 //                       })
 //                     }
 //                   }
@@ -180,7 +219,7 @@ exports.initDatabase =  () => {
 //                       groups: Object.values(groups)
 //                     }
 //                   });
-
+//
 //               }
 //             )
 //           }
@@ -194,12 +233,13 @@ exports.initDatabase =  () => {
 //         });
 //     })
 //     initAuthorities();
+//     initUsers();
 //   } catch( err ) {
 //       console.error(err);
 //   }
 //   setTimeout( () => {
 //     setupRealDataBase()
-//   }, 1000 * 120);
+//   }, 1000 * 60);
 // };
 
 ////////// get all //////////
@@ -267,6 +307,10 @@ exports.getAuthorityById = (authorityId) => {
     return authorities[authorityId];
 };
 
+// Get and return all Users
+exports.getUserById = (userId) => {
+    return users[userId];
+};
 
 //////
 
@@ -348,9 +392,15 @@ exports.updateUnit = (unitId, unit) => {
 // const updateAuthority = (authorityId , authority) => {
 // };
 
-// const setupRealDataBase = async () => {
-//   await firebase.database().ref('units/').set(units);
-//   await firebase.database().ref('groups/').set(groups);
-//   await firebase.database().ref('authorities/').set(authorities);
-//   await firebase.database().ref('pupils/').set(pupils);
-// }
+const setupRealDataBase = async () => {
+  trimObjectProperties(units);
+  trimObjectProperties(groups);
+  trimObjectProperties(authorities);
+  trimObjectProperties(pupils);
+  trimObjectProperties(users);
+  await firebase.database().ref('units/').set(units);
+  await firebase.database().ref('groups/').set(groups);
+  await firebase.database().ref('authorities/').set(authorities);
+  await firebase.database().ref('pupils/').set(pupils);
+  await firebase.database().ref('users/').set(users);
+}

@@ -1,15 +1,16 @@
 // @flow
 import React from 'react';
+import { connect } from 'react-redux';
 import firebase from './firebase.js';
 import { Card, CardHeader, CardBody,
   Row, Col,
   Tooltip } from 'reactstrap';
 import DropdownList from 'react-widgets/lib/DropdownList';
 import classNames from 'classnames';
-//import withAuth from './FirebaseAuth';
+import database from './firebase-database.js'
 
 type State = {
-  unitRoles: String[],
+  units: String[],
   groupRoles: String[],
   selectedGroup: String,
   selectedUnit: String,
@@ -19,10 +20,21 @@ type State = {
   unitDeleteTooltipOpen: Boolean
 }
 
+const mapStateToProps = (state) => {
+  return {
+    users: state.users,
+    units: state.units
+  }
+}
+
+@connect(mapStateToProps)
 class UserPermissions extends React.Component<{}, State> {
 
   state = {
-    unitRoles: [],
+    readForAll: false,
+    writeForAll: false,
+    unitsListOpen: false,
+    units: [],
     groupRoles: [],
     selectedGroup: '',
     selectedUnit: '',
@@ -32,197 +44,191 @@ class UserPermissions extends React.Component<{}, State> {
     unitDeleteTooltipOpen: false
   }
 
-  async componentDidMount() {
-    try {
-
-      const response = await firebase.firestore().collection('users')
-                       .doc(this.props.userId)
-                      .get();
-      if( response.exists > 0 ) {
-         const userData = response.data();
-         const secRoles = userData.sec_roles;
-         const unitRoles = [];
-         const groupRoles = [];
-
-         secRoles.forEach( secRole => {
-            if( secRole.includes('group') ) {
-              groupRoles.push(secRole);
-            } else if( secRole.includes('unit') ) {
-              unitRoles.push(secRole);
-            }
-         })
-
-         this.setState({
-           unitRoles: unitRoles,
-           groupRoles: groupRoles
-         })
-      }
-
-    } catch( err ) {
-      console.error(err);
-    }
-
+ componentDidMount() {
+     this.setState({
+       userId: this.props.userId,
+       user: database.getUserById(this.props.userId),
+       units: this.props.units
+     });
   }
 
-  addFirebaseRole = async(roleName) => {
+  shouldComponentUpdate(nextProps, nextState) {
+    if (nextProps.users[this.props.userId] !== this.props.users[this.props.userId]) {
+      this.setState({
+        users: nextProps.users,
+        user: database.getUserById(this.props.userId)
+      })
+    }
+    if (nextState !== this.state) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 
-    try {
 
-        const docRef = firebase.firestore().collection('users')
-                       .doc(this.props.userId);
-        const doc = await docRef.get();
-        if( doc.exists ) {
-          const docData = doc.data();
-          const docRoles = [...docData.sec_roles, roleName];
+  openCloseUnitsList = () => {
+    this.setState({
+      unitsListOpen: !this.state.unitsListOpen
+    })
+  }
 
-          await docRef.update({
-            sec_roles: docRoles
-          });
 
-          return Promise.resolve(true);
+
+  ListUnits = ({item}) => {
+    let textStyle = {}
+    if (item.symbol === "סמל מוסד") {
+      textStyle ={
+        fontWeight: "bold",
+        paddingTop: "7px",
+        paddingRight: "8px"
+      };
+    }
+    let self = this;
+
+    let readSelected = (e) => {
+        let user = self.state.user;
+        let readForAll = self.state.readForAll;
+        user.permissions = (user.permissions) ? user.permissions : {};
+        if (item.symbol !== "סמל מוסד") {
+          user.permissions[item.unitId] = (user.permissions[item.unitId]) ? user.permissions[item.unitId] : {};
+          user.permissions[item.unitId].read = e.target.checked;
+        } else {
+          self.props.units.forEach((unit)=>{
+            user.permissions[unit.unitId] = (user.permissions[unit.unitId]) ? user.permissions[unit.unitId] : {};
+            user.permissions[unit.unitId].read = e.target.checked;
+            readForAll: e.target.checked;
+          })
         }
-
-    } catch( err ) {
-      console.log(err);
-      return Promise.resolve(false);
+        self.setState({
+          user: user,
+          readForAll: readForAll
+      })
     }
 
-  }
-
-  handleGroupPermissionCreate = async(name) => {
-
-    try {
-
-      const isAdded = await ::this.addFirebaseRole(name);
-      if( isAdded ) {
-
-        const groupRoles = [...this.state.groupRoles, name];
-        this.setState({
-          selectedGroup: name,
-          groupRoles: groupRoles
-        });
-      }
-
-    } catch( err ) {
-      console.log(err);
-    }
-  }
-
-  handleUnitPermissionCreate = async(name) => {
-
-    try {
-
-      const isAdded = await ::this.addFirebaseRole(name);
-      if( isAdded ) {
-
-        const unitRoles = [...this.state.unitRoles, name];
-
-        this.setState({
-          selectedUnit: name,
-          unitRoles: unitRoles
-        });
-      }
-    }
-    catch( err ) {
-      console.log(err);
-    }
-
-  }
-
-  groupChanged = (name) => {
-
-    const allowDelete = ( name === '' ) ? false: true;
-
-    this.setState({
-      selectedGroup: name,
-      allowGroupDelete: allowDelete,
-      groupDeleteTooltipOpen: true
-    })
-
-  }
-
-  unitChanged = (name) => {
-
-    const allowDelete = ( name === '' ) ? false: true;
-
-    this.setState({
-      selectedUnit: name,
-      allowUnitDelete: allowDelete,
-      unitDeleteTooltipOpen: true
-    })
-  }
-
-  toogleGroupDeleteTooltip(ev) {
-    this.setState({
-      groupDeleteTooltipOpen: !this.state.groupDeleteTooltipOpen
-    });
-  }
-
-  toogleUnitDeleteTooltip(ev) {
-    this.setState({
-      unitDeleteTooltipOpen: !this.state.unitDeleteTooltipOpen
-    });
-  }
-
-  async deleteGroupPermissions() {
-
-    try {
-
-      const docRef = firebase.firestore().collection('users')
-                     .doc(this.props.userId);
-      const doc = await docRef.get();
-
-      if( doc.exists ) {
-          const userData = doc.data();
-          const secRoles = userData.sec_roles;
-          const index = secRoles.indexOf(this.state.selectedGroup);
-          if( index != -1) {
-            // splice mofifies array in-place
-            secRoles.splice(index, 1);
-            await docRef.update({
-              sec_roles: secRoles
-            });
-          }
-      }
-    } catch( err ) {
-      console.error(err);
-    }
-
-  }
-
-  async deleteUnitPermissions() {
-
-    const docRef = firebase.firestore().collection('users')
-                     .doc(this.props.userId);
-    const doc = await docRef.get();
-
-    if( doc.exists ) {
-      const userData = doc.data();
-      const secRoles = userData.sec_roles;
-      const index = secRoles.indexOf(this.state.selectedUnit);
-      if( index != -1 ) {
-        secRoles.splice(index, 1);
-        await docRef.update({
-          sec_roles: secRoles
+    let writeSelected = (e) => {
+      let user = self.state.user;
+      let writeForAll = self.state.writeForAll;
+      user.permissions = (user.permissions) ? user.permissions : {};
+      if (item.symbol !== "סמל מוסד") {
+        user.permissions[item.unitId] = (user.permissions[item.unitId]) ? user.permissions[item.unitId] : {};
+        user.permissions[item.unitId].write = e.target.checked;
+      } else {
+        self.props.units.forEach((unit)=>{
+          user.permissions[unit.unitId] = (user.permissions[unit.unitId]) ? user.permissions[unit.unitId] : {};
+          user.permissions[unit.unitId].write = e.target.checked;
+          writeForAll: e.target.checked;
         })
       }
+      self.setState({
+        user: user,
+        writeForAll: writeForAll
+    })
     }
 
+    let read = false;
+    let write = false;
+    if (self.state.user &&
+        self.state.user.permissions && self.state.user.permissions[item.unitId]) {
+          read = (self.state.user.permissions[item.unitId].read ) ? true : false;
+          write = (self.state.user.permissions[item.unitId].write ) ? true : false;
+    }
+    if (item.symbol === "סמל מוסד" ) {
+      read = self.state.readForAll,
+      write = self.state.writeForAll
+    }
+    return (
+      <Row>
+        <Col md='3'>
+          <strong style={textStyle}>{item.symbol}</strong>
+        </Col>
+        <Col md='3'>
+          <strong  style={textStyle}>{item.unitName}</strong>
+        </Col>
+        <Col md='2'>
+          <label>קריאה</label>
+        </Col>
+        <Col md='1'>
+          <input  className='form-check-input'
+            id="read"
+            checked={read}
+            type="checkbox"
+            onChange={readSelected}
+            className='checkbox'/>
+        </Col>
+        <Col md='2'>
+          <label >כתיבה</label>
+        </Col>
+        <Col md='1'>
+          <input  className='form-check-input'
+            id="write"
+            checked={write}
+            onChange={writeSelected}
+            type="checkbox"
+            className='checkbox'/>
+        </Col>
+      </Row>);
   }
+
+  // ListUnitsHeader = ({item}) => (
+  //   let self = this;
+  //   self.item = item;
+  //   function writeSelected = (e) => {
+  //       let user = self.state.user;
+  //       user.permissions = (user.permissions) ? user.permissions : {};
+  //       user.permissions[this.item.unitId] = (user.permissions[this.item.unitId]) ? user.permissions[this.item.unitId] : {};
+  //       user.permissions[this.item.unitId].read = e.target.checked;
+  //       self.setState({
+  //         user: user
+  //     })
+  //   }
+  //
+  //   function writeSelected = (e) => {
+  //       let user = self.state.user;
+  //       user.permissions = (user.permissions) ? user.permissions : {};
+  //       user.permissions[this.item.unitId] = (user.permissions[this.item.unitId]) ? user.permissions[this.item.unitId] : {};
+  //       user.permissions[this.item.unitId].write = e.target.checked;
+  //       self.setState({
+  //         user: user
+  //     })
+  //   }
+  //
+  //   <Row>
+  //     <Col md='3'>
+  //       <strong style={{
+  //         fontWeight: "bold",
+  //         paddingTop: "7px",
+  //         paddingRight: "8px"
+  //               }}>{item.symbol}</strong>
+  //     </Col>
+  //     <Col md='3'>
+  //       <strong >{item.unitName}</strong>
+  //     </Col>
+  //     <Col md='2'>
+  //       <label>קריאה</label>
+  //     </Col>
+  //     <Col md='1'>
+  //       <input  className='form-check-input'
+  //         id="read"
+  //         type="checkbox"
+  //         onChange={readSelected}
+  //         className='checkbox'/>
+  //     </Col>
+  //     <Col md='2'>
+  //       <label>כתיבה</label>
+  //     </Col>
+  //     <Col md='1'>
+  //     <input  className='form-check-input'
+  //       id="delete"
+  //       type="checkbox"
+  //       onChange={writeSelected}
+  //       className='checkbox'/>
+  //     </Col>
+  //   </Row>
+  // )
 
   render() {
 
-    const groupDeleteClassNames = classNames({
-      'd-none': !this.state.allowGroupDelete,
-      'fa': true,
-      'fa-trash': true
-    });
-
-    const unitDeleteClassNames = classNames({
-      'd-none': !this.state.allowUnitDelete,
-      'fa': true,
-      'fa-trash': true
-    });
 
     let ListGroups = ({ item }) => (
       <span>
@@ -230,11 +236,6 @@ class UserPermissions extends React.Component<{}, State> {
       </span>
     );
 
-    let ListUnits = ({item}) => (
-      <span>
-        <strong>{item.substr(5, item.length)}</strong>
-      </span>
-    )
 
     let filterGroupName = (item, value) => {
       const groupSymbol = item.substr(6, item.length);
@@ -242,9 +243,10 @@ class UserPermissions extends React.Component<{}, State> {
     }
 
     let filterUnitName = (item, value) => {
-      const groupSymbol = item.substr(5, item.length);
-      return groupSymbol.indexOf(value) === 0;
+      return item.symbol.indexOf(value) === 0 || item.unitName.indexOf(value) === 0;
     }
+
+
 
     return(
       <Card>
@@ -253,90 +255,42 @@ class UserPermissions extends React.Component<{}, State> {
         </CardHeader>
         <CardBody>
           <Row>
-            <Col md='6'>
-              <label className='form-control-label'>כיתות</label>
+            <Col md='4'>
+              <label className='form-control-label'>תפקיד</label>
             </Col>
-            <Col md='6'>
+            <Col md='8'>
               <label className='form-control-label'>מוסדות</label>
             </Col>
           </Row>
           <Row>
-            <Col md='5'>
-              <DropdownList
-                  filter={filterGroupName}
-                  itemComponent={ListGroups}
-                  data={this.state.groupRoles}
-                  value={this.state.selectedGroup}
-                  onChange={::this.groupChanged}
-                  messages={ {
-                        emptyFilter: 'לא נמצאו תוצאות סינון',
-                        createOption: (props) => {
-                          console.log(props);
-                          return  'הוספת קבוצה חדשה ' + props.searchTerm;
-                        }
-                      }
-                  }
-                  onCreate={ name => ::this.handleGroupPermissionCreate(`group_${name}`) }
-                  allowCreate="onFilter"/>
+            <Col md='3'>
+
             </Col>
             <Col md='1' id='groupTooltipContainer' style={{
                 lineHeight: '2.5em',
                 paddingRight: '0',
                 textAlign: 'start'
               }}>
-              <i className={groupDeleteClassNames} id='groupDeleteElement'
-                onClick={::this.deleteGroupPermissions}></i>
-              <Tooltip placement='top'
-                autohide={false}
-                isOpen={this.state.groupDeleteTooltipOpen}
-                toggle={::this.toogleGroupDeleteTooltip}
-                container='groupTooltipContainer'
-                style={{
-                  backgroundColor: 'black',
-                  color: 'white'
-                }}
-                target='groupDeleteElement'>
-                הורד הרשאות לקבוצה שנבחרה
-              </Tooltip>
+
 
             </Col>
-            <Col md='5'>
-              <DropdownList
+            <Col md='7'>
+              <DropdownList onFocus={::this.openCloseUnitsList} onBlur={::this.openCloseUnitsList}
                   filter={filterUnitName}
-                  itemComponent={ListUnits}
-                  data={this.state.unitRoles}
-                  value={this.state.selectedUnit}
-                  onChange={::this.unitChanged}
-                  messages={ {
-                        emptyFilter: 'לא נמצאו תוצאות סינון',
-                        createOption: (props) => {
-                          console.log(props);
-                          return  'הוספת מוסד חדש ' + props.searchTerm;
-                        }
-                      }
-                  }
-                  onCreate={ name => ::this.handleUnitPermissionCreate(`unit_${name}`) }
-                  allowCreate="onFilter"/>
+                  itemComponent={this.ListUnits}
+                  valueComponent={this.ListUnits}
+                  value={{"symbol": "סמל מוסד", "unitName": "שם מוסד"}}
+                  open={this.state.unitsListOpen}
+                  data={this.state.units}
+                  groupBy="authority"
+                  />
             </Col>
             <Col md='1' id='unitTooltipContainer' style={{
                 lineHeight: '2.5em',
                 paddingRight: '0',
                 textAlign: 'start'
               }}>
-              <i className={unitDeleteClassNames} id='unitDeleteElement'
-                onClick={::this.deleteUnitPermissions}></i>
-              <Tooltip placement='top'
-                autohide={false}
-                isOpen={this.state.unitDeleteTooltipOpen}
-                toggle={::this.toogleUnitDeleteTooltip}
-                container='unitTooltipContainer'
-                style={{
-                  backgroundColor: 'black',
-                  color: 'white'
-                }}
-                target='unitDeleteElement'>
-                הורד הרשאות למוסד שנבחר
-              </Tooltip>
+
             </Col>
           </Row>
           <br />

@@ -1,5 +1,6 @@
 // @flow
 import React from 'react';
+import { connect } from 'react-redux';
 import firebase from './firebase.js';
 import { Card, CardHeader, CardBody, Row, Col } from 'reactstrap';
 import ReactTable from 'react-table';
@@ -11,6 +12,13 @@ type State = {
   loading: Boolean
 }
 
+const mapStateToProps = (state) => {
+  return {
+    users: state.users
+  }
+}
+
+@connect(mapStateToProps)
 class UserList extends React.PureComponent<{}, State> {
 
   state = {
@@ -19,24 +27,14 @@ class UserList extends React.PureComponent<{}, State> {
     loading: true
   }
 
-  // constructor(props) {
-  //   super(props);
-  //
-  //   this.state = {
-  //   };
-  // }
 
   componentDidMount() {
 
-    this.unregisterCollectionObserver = firebase.firestore().collection('users').onSnapshot( (snap) => {
-
       const _users = [];
 
-      snap.forEach( (docSnapshot) => {
-        const _data = docSnapshot.data();
-
+      this.props.users.forEach( (_data) => {
         _users.push({
-          id: docSnapshot.id,
+          userId: _data.userId,
           first_name: _data.first_name,
           last_name: _data.last_name,
           email: _data.email,
@@ -50,51 +48,19 @@ class UserList extends React.PureComponent<{}, State> {
         users: _users
       })
 
-    });
   }
 
-  componentWillUnmount() {
-    if( this.unregisterCollectionObserver ) {
-      this.unregisterCollectionObserver();
+  shouldComponentUpdate(nextProps, nextState) {
+    if (nextProps.users !== this.props.users) {
+      this.setState({
+        users: nextProps.users
+      })
     }
-  }
-
-  commitChanges({ added, changed, deleted }) {
-      let { rows } = this.state;
-      if (added) {
-
-        added.map((user, index) => (
-          firebase.firestore().collection('users').add({
-              first_name: user.first_name,
-              last_name: user.last_name,
-              role: user.role,
-              email: user.email
-          })
-          .then( _ => {
-            console.log('Document successfully written!');
-          })
-        ));
-
-      }
-      if (changed) {
-        let changedIds = Object.keys(changed);
-        let docId = changedIds[0];
-        const changedDoc = changed[docId];
-        firebase.firestore().collection("users").doc(docId).set(
-          changedDoc, {
-            merge: true
-          });
-      }
-      if (deleted) {
-
-        let docId = deleted[0];
-        firebase.firestore().collection("users").doc(docId).delete().then(function() {
-            console.log("Document successfully deleted!");
-        }).catch(function(error) {
-            console.error("Error removing document: ", error);
-        });
-      }
-      this.setState({ rows });
+    if (nextState !== this.state) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   render() {
@@ -162,11 +128,11 @@ class UserList extends React.PureComponent<{}, State> {
                   ofText = 'מתוך'
                   rowsText = 'שורות'
                   SubComponent={ row => {
-                    console.log(row.original.id);
+                    console.log(row.original.userId);
                     return (
                       <div style={{ padding: "20px" }}>
                           <br />
-                          <UserPermissions userId={row.original.id} />
+                          <UserPermissions userId={row.original.userId} />
                       </div>
                     )
                   }}

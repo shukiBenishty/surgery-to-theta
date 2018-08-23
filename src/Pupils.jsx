@@ -99,9 +99,10 @@ class Pupils extends React.Component<{}, State> {
  loadPupils(isAdmin: Boolean, props) {
     let _pupils = props.pupils.map((pupil) => {
     // pupil.birthDay = pupil.birthDay ? moment.unix(pupil.birthDay.seconds).format('DD/MM/YYYY') : '';
+    let groupSymbol = (this.state.groups && this.state.groups[pupil.groupId]) ? this.state.groups[pupil.groupId].groupSymbol : ''
       return{
         ...pupil,
-        groupSymbol: (this.state.groups ) ? this.state.groups[pupil.groupId] : '' ,
+        groupSymbol:groupSymbol  ,
         isAdmin: isAdmin
       };
     })
@@ -118,7 +119,6 @@ class Pupils extends React.Component<{}, State> {
 
   componentDidMount(){
     this.loadPupils(this.props.isAdmin, this.props);
-    this.loadGroups(this.props);
     this.loadAuthorities(this.props);
     this.setState({
       units: this.props.units,

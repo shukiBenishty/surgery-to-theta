@@ -41,6 +41,7 @@ let withAuth = (WrappedComponent) => class extends React.Component<{}, State> {
     if( response.docs.length != 0 ) {
       const docSnapshot = response.docs[0];
       const docData = docSnapshot.data()
+      let permissions = docData.permissions;
       let userRoles = docData.sec_roles;
       const role = docData.role.toLowerCase();
 
@@ -50,6 +51,7 @@ let withAuth = (WrappedComponent) => class extends React.Component<{}, State> {
 
       this.setState({
         secRoles: userRoles,
+        permissions: (permissions) ? permissions : {},
         email: email,
         isAdmin: role === 'admin' ? true : false
       });
@@ -57,6 +59,7 @@ let withAuth = (WrappedComponent) => class extends React.Component<{}, State> {
         type: 'USER_CHANGED',
         data: {
           secRoles: userRoles,
+          permissions: (permissions) ? permissions : {},
           email: email,
           isAdmin: role === 'admin' ? true : false
         }

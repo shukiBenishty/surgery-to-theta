@@ -1,6 +1,8 @@
 import _ from 'lodash';
 
 const INITIAL_STATE = {
+  permissions: {},
+  users: [],
   secRoles: [''],
   email: '',
   isAdmin: false,
@@ -36,7 +38,8 @@ const reducers = (state = INITIAL_STATE, action) => {
 
     case 'USER_CHANGED': {
       state = _.assign({}, state, {
-                                    secRoles: action.data.userRoles,
+                                    secRoles: action.data.secRoles,
+                                    permissions: action.data.permissions,
                                     email: action.data.email,
                                     isAdmin: action.data.isAdmin
                                   });
@@ -66,6 +69,13 @@ const reducers = (state = INITIAL_STATE, action) => {
     case 'AUTHORITIES_CHANGED': {
       state = _.assign({}, state, {
                                     authorities: action.data.authorities
+                                  });
+    }
+    break;
+
+    case 'USERS_CHANGED': {
+      state = _.assign({}, state, {
+                                    users: action.data.users
                                   });
     }
     break;
