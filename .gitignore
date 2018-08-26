@@ -1,0 +1,15 @@
+.DS_Store
+
+# Logs
+logs
+*.log
+
+# Optional npm cache directory
+.npm
+
+# Dependency directories
+node_modules/
+
+dist
+yarn.lock
+*.lock
