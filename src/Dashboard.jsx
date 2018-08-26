@@ -23,7 +23,7 @@ import withAuth from './FirebaseAuth';
 
 import firebase from './firebase.js';
 import dashboardRoutes from './routes/dashboard.jsx';
-
+import database from './firebase-database.js'
 
 import Sidebar from './Sidebar';
 import Header from './Header';
@@ -57,12 +57,22 @@ class Dashboard extends React.Component<Props, State> {
       error: ''
   }
 
-  componentDidMount() {
+  componentWillMount() {
 
     const self = this;
 
     firebase.auth().onAuthStateChanged( (user) => {
       if( user ) {
+
+
+        this.props.dispatch({
+          type: 'LOGIN',
+          data: {
+            userName: user.displayName,
+            userPictureUrl: user.photoURL
+          }
+        });
+
         const email = user.email;
 
         // get user's role
@@ -80,6 +90,7 @@ class Dashboard extends React.Component<Props, State> {
                     } else {
 
                       const docSnapshot = response.docs[0];
+                      database.initDatabase(user.uid, docSnapshot.data().role);
                       return docSnapshot.data().role;
 
                     }

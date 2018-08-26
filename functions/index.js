@@ -1,19 +1,14 @@
-const functions = require('firebase-functions');
-require('firebase/firestore');
+const functions = require('./init.js').functions;
+const firestore = require('./init.js').firestore;
+const realTimeDB = require('./init.js').realTimeDB;
 
-const admin = require('firebase-admin');
+const pupilsFunctions = require('./pupils.js');
+const permissionsFunctions = require('./permissions.js');
+
 const moment = require('moment');
-var Validator = require('jsonschema').Validator;
-
-admin.initializeApp();
-const firestore = admin.firestore();
-
-const realTimeDB = admin.database();
-
-
+const Validator = require('jsonschema').Validator;
 const express = require('express');
-
-var bodyParser = require('body-parser');
+const bodyParser = require('body-parser');
 const cors = require('cors')({origin: true});
 
 const app = express();
@@ -216,6 +211,63 @@ app.post('/pupil', (req, res) => {
 
 exports.api = functions.https.onRequest(app);
 
+
+
+// exports.users = functions.https.onRequest((req, res) => {
+//     let promises = [];
+//     let promises2 = [];
+//     let promises3 = [];
+//
+//     promises.push(firestore.collection('users')
+//       .get()
+//       .then( (_users) => {
+//         _users.docs.forEach( (user) => {
+//           const _user = user.data();
+//           console.log(_user);
+//           console.log(`user name: ${_user.last_name}, email: ${_user.email}`);
+//           promises2.push(admin.auth()
+//             .getUserByEmail(_user.email.trim())
+//             .then( (userRecord ) => {
+//                 console.log(`found uid:${userRecord.uid} for: ${_user.last_name}`);
+//                 promises3.push(firestore.collection('users')
+//                             .doc(user.id).delete()
+//                             .then(() => {
+//                               return console.log(`user name: ${_user.last_name} with Id: ${user.id} was delete`);
+//                             })
+//                             .catch((e) => {
+//                               console.error(`error while try to delete user name: ${_user.last_name} with Id: ${user.id} was delete`);
+//                             }));
+//                   promises3.push(firestore.collection('users')
+//                             .doc(userRecord.uid)
+//                             .set(_user)
+//                             .then( () => {
+//                               return console.log(`add user name: ${_user.last_name} with Id: ${user.id} ${_user}`);
+//                             })
+//                             .catch((e) => {
+//                               console.error(`error while try to add user name: ${_user.last_name} with Id: ${user.id} was delete -- ${e}`);
+//                             }));
+//                   return true;
+//                 })
+//                 .catch((e) => {
+//                   console.error(`error while try get Auth info for user ${_user.last_name} name:  Id: ${user.id} was delete -- ${e}`);
+//                 })
+//               );
+//             }
+//           )
+//           return true;
+//         }
+//       )
+//       )
+//        return Promise.all(promises).then(() => {
+//         return Promise.all(promises2).then(() => {
+//           return Promise.all(promises3).then(() => {
+//               return res.status(200).send(`success`);
+//           })
+//         })
+//       })
+//     }
+//   );
+
 exports.groups = functions.https.onRequest((req, res) => {
 
   var method = req.method;
@@ -249,137 +301,30 @@ exports.units = functions.https.onRequest((req, res) => {
 
 
 exports.unregisterPupil  = functions.firestore
-    .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
-    .onDelete((snap, context) => {
-      console.log(`onDelete PupilId: ${context.params.pupilId}`);
+                            .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
+                            .onDelete(pupilsFunctions.unregisterPupil)
 
-      let promises = [];
-      var updates = {};
-      const doc = firestore.doc(`units/${context.params.unitId}/groups/${context.params.groupId}`);
-
-      promises.push(doc.get()
-                .then( _doc => {
-                  const docData = _doc.data();
-
-                  const value = docData.registeredPupils - 1;
-                  return doc.update({
-                    registeredPupils: value
-                  })
-                  .then( res => {
-                    console.log(`RegisteredPupils=${value}`);
-                    return true;
-                  })
-                }).catch( err => {
-                    console.error(`Error catched ${err.message}`);
-                }));
-      updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = null;
-      updates[`/pupils/${context.params.pupilId}`] = null;
-
-      promises.push(realTimeDB.ref().update(updates));
-
-      return Promise.all(promises);
-    })
-
-  exports.registerPupil = functions.firestore
-  .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
-  .onCreate( (document, context) => {
-    console.log(`onCreate  ${context.params.pupilId}`);
-
-    let promises = [];
-    var updates = {};
-    const doc = firestore.doc(`units/${context.params.unitId}/groups/${context.params.groupId}`);
-
-    promises.push(doc.get()
-              .then( _doc => {
-                  const docData = _doc.data();
-
-                  const value = docData.registeredPupils + 1;
-
-                  return doc.update({
-                    registeredPupils: value
-                  })
-                  .then( res => {
-                    console.log(`RegisteredPupils=${docData.registeredPupils}`);
-                    return true;
-                  })
-              })
-              .then( res => {
-                const _json = JSON.stringify(res);
-                console.log(`Update result: ${_json}`);
-                return true;
-              }).catch( err => {
-                  console.error(`Error catched ${err.message}`);
-              }));
-
-    promises.push(realTimeDB.ref(`units/${context.params.unitId}`).once('value').then((snapshot) =>  {
-      var _unit = snapshot.val();
-      return {
-       unitName: (_unit && _unit.name_he) || null,
-       authority: (_unit && _unit.authority) || null
-      }
-    }));
-
-    // promises.push(realTimeDB.ref(`groups/${context.params.groupId}`).once('value').then((snapshot) =>  {
-    //   var _group = snapshot.val();
-    //   return {
-    //     groupSymbol: (_group && _group.symbol) || null,
-    //     groupName: (_group && _group.name) || null
-    //   }
-    // }));
-
-    return Promise.all(promises).then((val) => {
-      updates[`/groups/${context.params.groupId}/pupils/${context.params.pupilId}`] = {
-        "pupilId": context.params.pupilId,
-        };
-      updates[`/pupils/${context.params.pupilId}`] = _spread({}, document, {
-                                                      "id": context.params.pupilId,
-                                                      "groupId": context.params.groupId,
-                                                      "authority": val[0].authority,
-                                                      "unitId": context.params.unitId,
-                                                      "birthDay": document.birthDay && document.birthDay.seconds ? moment.unix(document.birthDay.seconds).format('DD/MM/YYYY') : '',
-                                                      "whenRegistered": document.whenRegistered && document.whenRegistered.seconds ? moment.unix(document.whenRegistered.seconds).format('DD/MM/YYYY HH:mm:ss') : ''
-                                                      });
-      return realTimeDB.ref().update(updates)
-    });
-  })
+exports.registerPupil =  functions.firestore
+                             .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
+                             .onCreate( pupilsFunctions.registerPupil);
 
 exports.updatePupil = functions.firestore
-    .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
-    .onUpdate((change, context) => {
-      console.log(`onUpdate  ${context.params.pupilId}`);
+                             .document('units/{unitId}/groups/{groupId}/pupils/{pupilId}')
+                             .onUpdate(pupilsFunctions.updatePupil)
 
-      var updates = {};
-      var promises = [];
-      const document = change.after.data();
 
-     promises.push(realTimeDB.ref(`units/${context.params.unitId}`).once('value').then((snapshot) =>  {
-        var _unit = snapshot.val();
-        return {
-         unitName: (_unit && _unit.name_he) || null,
-         authority: (_unit && _unit.authority) || null
-        }
-      }));
+exports.permissionsDeleted  = functions.firestore
+                           .document('users/{userId}/permissions/{unitsId}')
+                           .onDelete( permissionsFunctions.permissionsDeleted )
 
-      // promises.push(realTimeDB.ref(`groups/${context.params.groupId}`).once('value').then((snapshot) =>  {
-      //   var _group = snapshot.val();
-      //   return {
-      //     groupSymbol: (_group && _group.symbol) || null,
-      //     groupName: (_group && _group.name) || null
-      //   }
-      // }));
+exports.permissionsAdded =  functions.firestore
+                            .document('users/{userId}/permissions/{unitsId}')
+                            .onCreate( permissionsFunctions.permissionsAdded );
 
-      return Promise.all(promises).then((val) => {
-        updates[`/pupils/${context.params.pupilId}`] = _spread({}, document, {
-                                                        "id": context.params.pupilId,
-                                                        "groupId": context.params.groupId,
-                                                        "authority": val[0].authority,
-                                                        "unitId": context.params.unitId,
-                                                        "birthDay": document.birthDay && document.birthDay.seconds ? moment.unix(document.birthDay.seconds).format('DD/MM/YYYY') : '',
-                                                        "whenRegistered": document.whenRegistered && document.whenRegistered.seconds ? moment.unix(document.whenRegistered.seconds).format('DD/MM/YYYY HH:mm:ss') : ''
-                                                        });
-        return realTimeDB.ref().update(updates)
-      });
-    });
+
+exports.permissionsUpdate = functions.firestore
+                            .document('users/{userId}/permissions/{unitsId}')
+                            .onUpdate( permissionsFunctions.permissionsUpdate )
 
 function getUnits(req, res) {
 

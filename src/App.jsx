@@ -5,11 +5,10 @@ import { Switch, Route } from 'react-router-dom';
 import Login from './Login';
 import Logout from './Logout';
 import Dashboard from './Dashboard';
-import database from './firebase-database.js'
+
 
 
 const App = () => {
-    database.initDatabase();
     return(
       <Switch>
         <Route exact path='/' component={Login} />

@@ -30,22 +30,13 @@ class Login extends React.PureComponent {
 
            if( user ) {
 
-             // Can I dispatch several actions at once?
-             this.props.dispatch({
-               type: 'LOGIN',
-               data: {
-                 userName: user.displayName,
-                 userPictureUrl: user.photoURL
-               }
-             });
-
              this.props.dispatch({
                type: 'PAGE_NAVIGATED',
                data: {
                  pageName: 'ראשי',
                }
              });
-
+             
              this.props.history.push('dashboard');
 
           }

@@ -19,7 +19,7 @@ const mapStateToProps = (state) => {
 }
 
 @connect(mapStateToProps)
-class UserList extends React.PureComponent<{}, State> {
+class UserList extends React.Component<{}, State> {
 
   state = {
     users: [],

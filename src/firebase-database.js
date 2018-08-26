@@ -4,14 +4,7 @@ import moment from 'moment';
 
 const unitsRef = firebase.firestore().collection('units');
 const authoritiesRef = firebase.firestore().collection('authorities');
-const usersRef = firebase.firestore().collection('users')
-
-
-const _unitsRef = firebase.database().ref('units');
-const _pupilsRef = firebase.database().ref('pupils');
-const _groupsRef = firebase.database().ref('groups');
-const _authoritiesRef = firebase.database().ref('authorities');
-const _usersRef = firebase.database().ref('users')
+const usersRef = firebase.firestore().collection('users');
 
 var authorities = {};
 var units = {};
@@ -48,7 +41,7 @@ const trimObjectProperties = (objectToTrim) => {
 //       });
 //   })
 // }
-//
+
 // const initUsers = () => {
 //   usersRef.onSnapshot( _users => {
 //       _users.docChanges().forEach((user) => {
@@ -69,53 +62,76 @@ const trimObjectProperties = (objectToTrim) => {
 //   })
 // }
 
-exports.initDatabase =  () => {
+exports.initDatabase =  (uid, role) => {
   try {
     let promises = [];
-    promises.push(_unitsRef.on('value', (snapshot) => {
+    let RDBunitsRef = firebase.database().ref('units');
+    let RDBpupilsRef = firebase.database().ref('pupils');
+    let RDBgroupsRef = firebase.database().ref('groups');
+    let RDBauthoritiesRef = firebase.database().ref('authorities');
+    let RDBusersRef = firebase.database().ref('users')
+
+    if (role.toLowerCase() !== 'admin') {
+      RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      RDBpupilsRef = RDBpupilsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      RDBgroupsRef = RDBgroupsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      // RDBauthoritiesRef = RDBauthoritiesRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      // RDBusersRef = RDBusersRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+    }
+    promises.push(RDBunitsRef.on('value', (snapshot) => {
       units = snapshot.val();
-      store.dispatch({
-        type: 'UNITS_CHANGED',
-        data: {
-          units: Object.values(units)
-        }
-      });
+      if (units) {
+        store.dispatch({
+          type: 'UNITS_CHANGED',
+          data: {
+            units: Object.values(units)
+          }
+        });
+      }
     }));
-    promises.push(_groupsRef.on('value', (snapshot) => {
+    promises.push(RDBgroupsRef.on('value', (snapshot) => {
       groups = snapshot.val();
-      store.dispatch({
-        type: 'GROUPS_CHANGED',
-        data: {
-          groups: Object.values(groups)
-        }
-      });
+      if (groups) {
+        store.dispatch({
+          type: 'GROUPS_CHANGED',
+          data: {
+            groups: Object.values(groups)
+          }
+        });
+      }
     }));
-    promises.push(_pupilsRef.on('value', (snapshot) => {
+    promises.push(RDBpupilsRef.on('value', (snapshot) => {
       pupils = snapshot.val();
-      store.dispatch({
-        type: 'PUPILS_CHANGED',
-        data: {
-          pupils: Object.values(pupils)
-        }
-      });
+      if (pupils) {
+        store.dispatch({
+          type: 'PUPILS_CHANGED',
+          data: {
+            pupils: Object.values(pupils)
+          }
+        });
+      }
     }));
-    promises.push(_authoritiesRef.on('value', (snapshot) => {
+    promises.push(RDBauthoritiesRef.on('value', (snapshot) => {
       authorities = snapshot.val();
-      store.dispatch({
-        type: 'AUTHORITIES_CHANGED',
-        data: {
-          authorities: Object.values(authorities)
-        }
-      });
+      if (authorities) {
+        store.dispatch({
+          type: 'AUTHORITIES_CHANGED',
+          data: {
+            authorities: Object.values(authorities)
+          }
+        });
+      }
     }));
-    promises.push(_usersRef.on('value', (snapshot) => {
+    promises.push(RDBusersRef.on('value', (snapshot) => {
       users = snapshot.val();
-      store.dispatch({
-        type: 'USERS_CHANGED',
-        data: {
-          users: Object.values(users)
-        }
-      });
+      if (users) {
+        store.dispatch({
+          type: 'USERS_CHANGED',
+          data: {
+            users: Object.values(users)
+          }
+        });
+      }
     }));
 
     Promise.all(promises);
@@ -239,7 +255,7 @@ exports.initDatabase =  () => {
 //   }
 //   setTimeout( () => {
 //     setupRealDataBase()
-//   }, 1000 * 60);
+//   }, 1000 * 120);
 // };
 
 ////////// get all //////////
