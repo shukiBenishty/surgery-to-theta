@@ -408,6 +408,44 @@ exports.updateUnit = (unitId, unit) => {
 // const updateAuthority = (authorityId , authority) => {
 // };
 
+
+
+
+// // Get and return all Units
+// exports.changePermissions = (user) => {
+//   const permissionsRef = usersRef.doc(user.userId).collection('permissions');
+  
+//   if(!users[user.userId].permissions){
+//     users[user.userId].permissions = {};
+//   }
+//   var batch = firebase.firestore().batch();
+
+//   for (var unitId in users[user.userId].permissions){
+//     if (user.permissions[unitId] !== undefined) {
+//       batch.update(permissionsRef.doc(unitId), user.permissions[unitId]);
+//     } else {
+//       batch.delete(permissionsRef.doc(unitId));
+//     }
+//   }
+//   for (var unitId in units){
+//     if (user.permissions[unitId] !== undefined && 
+//         users[user.userId].permissions[unitId] === undefined) {
+//       batch.set(permissionsRef.doc(unitId), user.permissions[unitId])
+//     }
+//   }
+//   return batch.commit();
+// };
+
+
+// Get and return all Units
+exports.changePermissions = (user) => {
+  var updates = {}
+  updates['permissions'] = user.permissions;
+  return usersRef.doc(user.userId).update(updates);
+  
+};
+
+
 const setupRealDataBase = async () => {
   trimObjectProperties(units);
   trimObjectProperties(groups);

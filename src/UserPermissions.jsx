@@ -17,7 +17,20 @@ type State = {
   allowGroupDelete: Boolean,
   groupDeleteTooltipOpen: Boolean,
   allowUnitDelete: Boolean,
-  saveChangingTooltipOpen: Boolean
+  saveChangingTooltipOpen: Boolean,
+  unitsDisabled: Boolean,
+  role: String
+
+}
+
+const deepCopy = (mainObj) => {
+  let objCopy = {};
+  let key;
+
+  for (key in mainObj) {
+    objCopy[key] = mainObj[key]; 
+  }
+  return objCopy;
 }
 
 const mapStateToProps = (state) => {
@@ -41,14 +54,17 @@ class UserPermissions extends React.Component<{}, State> {
     allowGroupDelete: false,
     groupDeleteTooltipOpen: false,
     allowUnitDelete: false,
-    saveChangingTooltipOpen: false
+    saveChangingTooltipOpen: false,
+    unitsDisabled: false,
+    role: undefined
   }
 
   componentDidMount() {
+
       this.setState({
         users: this.props.users,
         userId: this.props.userId,
-        user: database.getUserById(this.props.userId),
+        user: deepCopy(database.getUserById(this.props.userId)),
         units: this.props.units
       });
    }
@@ -57,7 +73,7 @@ class UserPermissions extends React.Component<{}, State> {
      if (nextProps.users[this.props.userId] !== this.props.users[this.props.userId]) {
        this.setState({
          users: nextProps.users,
-         user: database.getUserById(this.props.userId)
+         user: deepCopy(database.getUserById(this.props.userId))
        })
      }
      if (nextState !== this.state) {
@@ -69,11 +85,31 @@ class UserPermissions extends React.Component<{}, State> {
 
 
   openCloseUnitsList = () => {
+          ///for test
+    if(this.state.unitsListOpen){
+      database.changePermissions(this.state.user).then((res) => {
+        console.log(res)
+      }).catch((err) => {
+        console.log(err)
+      })
+    }
+    ///////
     this.setState({
       unitsListOpen: !this.state.unitsListOpen
     })
+
   }
 
+  roleChange = (item) => {
+    this.setState({
+      role: item,
+      unitsDisabled: (item.role === 'admin')? true: false
+    })
+  }
+
+  saveRoleChanging(){
+      console.log("save changing");
+  }
 
   saveChanging(){
     console.log("save changing");
@@ -229,17 +265,32 @@ class UserPermissions extends React.Component<{}, State> {
           <Row>
             <Col md='3'>
               <DropdownList
-                  value="אנא בחר תפקיד"
-                  data={["משתמש","מנהל"]}
+                  placeholder='סנן לפי רשויות'
+                  value={this.state.role}
+                  data={[{label:"משתמש" , role: "user"},{label:"מנהל", role:"admin"}]}
+                  textField="label"
+                  onChange={::this.roleChange}
                   />
             </Col>
-            <Col md='1' id='groupTooltipContainer' style={{
+            <Col md='1' id='RoleTooltipContainer' style={{
                 lineHeight: '2.5em',
                 paddingRight: '0',
                 textAlign: 'start'
               }}>
-
-
+                <i className={saveChanging} id='saveRoleChangingElement'
+                  onClick={::this.saveRoleChanging}></i>
+                <Tooltip placement='top'
+                  autohide={false}
+                  isOpen={this.state.unitsDisabled}
+                  toggle={::this.toogleSaveChangingTooltip}
+                  container='RoleTooltipContainer'
+                  style={{
+                    backgroundColor: 'black',
+                    color: 'white'
+                  }}
+                  target='saveRoleChangingElement'>
+                  לחץ לשמירת השינויים
+                </Tooltip>
             </Col>
             <Col md='7'>
               <DropdownList onFocus={::this.openCloseUnitsList} onBlur={::this.openCloseUnitsList}
@@ -250,6 +301,10 @@ class UserPermissions extends React.Component<{}, State> {
                   open={this.state.unitsListOpen}
                   data={this.state.units}
                   groupBy="authority"
+                  disabled={this.state.unitsDisabled}
+                  messages={{
+                    emptyFilter: 'לא נמצאו תוצאות סינון'
+                  }}
                   />
             </Col>
             <Col md='1' id='unitTooltipContainer' style={{
