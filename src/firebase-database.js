@@ -143,11 +143,12 @@ exports.initDatabase =  (uid, role) => {
     let promises = [];
 
     if (role.toLowerCase() !== 'admin') {
-      RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
-      RDBpupilsRef = RDBpupilsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
-      RDBgroupsRef = RDBgroupsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
-      // RDBauthoritiesRef = RDBauthoritiesRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
-      // RDBusersRef = RDBusersRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      //useer permissions not redy
+      // RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      // RDBpupilsRef = RDBpupilsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      // RDBgroupsRef = RDBgroupsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      // // RDBauthoritiesRef = RDBauthoritiesRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      // // RDBusersRef = RDBusersRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
     }
     promises.push(RDBunitsRef.on('value', (snapshot) => {
       units = snapshot.val();
