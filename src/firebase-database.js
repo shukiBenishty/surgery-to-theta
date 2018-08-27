@@ -6,11 +6,19 @@ const unitsRef = firebase.firestore().collection('units');
 const authoritiesRef = firebase.firestore().collection('authorities');
 const usersRef = firebase.firestore().collection('users');
 
+let RDBunitsRef = firebase.database().ref('units');
+let RDBpupilsRef = firebase.database().ref('pupils');
+let RDBgroupsRef = firebase.database().ref('groups');
+let RDBauthoritiesRef = firebase.database().ref('authorities');
+let RDBusersRef = firebase.database().ref('users')
+
+
 var authorities = {};
 var units = {};
 var groups = {};
 var pupils = {};
 var users = {};
+var uid = '';
 
 
 const trimObjectProperties = (objectToTrim) => {
@@ -67,12 +75,8 @@ const trimObjectProperties = (objectToTrim) => {
 
 exports.initDatabase =  (uid, role) => {
   try {
+    uid = uid;
     let promises = [];
-    let RDBunitsRef = firebase.database().ref('units');
-    let RDBpupilsRef = firebase.database().ref('pupils');
-    let RDBgroupsRef = firebase.database().ref('groups');
-    let RDBauthoritiesRef = firebase.database().ref('authorities');
-    let RDBusersRef = firebase.database().ref('users')
 
     if (role.toLowerCase() !== 'admin') {
       RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
@@ -333,23 +337,34 @@ exports.getUserById = (userId) => {
 
 // Get and return all Pupils
 exports.deletePupilById = (unitId, groupId, pupilId) => {
-  unitsRef.doc(unitId).collection('groups')
-  .doc(groupId).collection('pupils')
-  .doc(pupilId)
-  .delete();
+  let updates = {};
+  updates[`pupils/${pupilId}`] = null
+  updates[`groups/${groupId}/metadata/pupils/${pupilId}`] = null
+  updates[`groups/${groupId}/registeredPupils`] = groups[groupId].registeredPupils - 1
+  return firebase.database().ref().update(updates);
 };
 
 // Get and return all Groups
 exports.deleteGroupById = (unitId, groupId) => {
-  unitsRef.doc(unitId).collection('groups')
-  .doc(groupId)
-  .delete();
+  let updates = {};
+  updates[`groups/${groupId}`] = null
+  updates[`units/${unitId}/metadata/groups/${groupId}`] = null
+  return firebase.database().ref().update(updates);
 };
 
 // Get and return all Units
 exports.deleteUnitById = (unitId) => {
-  unitsRef.doc(unitId)
-  .delete();
+  let updates = {};
+  // for (var groupId in units[unitId].metadata.groups) {
+  //   for (var pupilId in groups[groupId].metadata.pupils) {
+  //     updates[`pupils/${pupilId}/metadata/unitId`] = null
+  //     updates[`pupils/${pupilId}/metadata/permissions`] = null
+  //   }
+  //   updates[`groups/${groupId}/metadata/unitId`] = null
+  //   updates[`groups/${groupId}/metadata/permissions`] = null
+  // }
+  updates[`units/${unitId}`] = null
+  return firebase.database().ref().update(updates);
 };
 
 // // Get and return all Users
@@ -386,10 +401,9 @@ exports.addUnit = (unit) => {
 
 // Get and return all Pupils
 exports.updatePupil = (unitId, groupId, pupilId, pupil) => {
-  unitsRef.doc(unitId).collection('groups')
-    .doc(groupId).collection('pupils')
-    .doc(pupilId)
-    .update(pupil)
+  var updates = {};
+  updates[`pupils/${pupilId}`] = pupil
+
 };
 
 // Get and return all Groups
