@@ -12,8 +12,8 @@ import UnitGroups from './UnitGroups';
 import database from './firebase-database.js'
 
 type State = {
-  docData: {
-    name: String,
+  unit: {
+    unitName: String,
     authority: String,
     concessionaire: String,
     symbol: String,
@@ -22,11 +22,11 @@ type State = {
     long_day_permit: Boolean,
     status: String
   },
-  docId: String,
+  unitId: String,
 }
 
 type Props = {
-  docId: String
+  unitId: String
 }
 
 const mapStateToProps = (state) => {
@@ -42,8 +42,8 @@ export default
 class Unit extends React.Component<Props, State> {
 
   state = {
-    docData: {
-      name: '',
+    unit: {
+      unitName: '',
       authority: '',
       concessionaire: '',
       symbol: '',
@@ -52,38 +52,36 @@ class Unit extends React.Component<Props, State> {
       long_day_permit: false,
       status: ''
     },
-    docId: '',
+    unitId: '',
   }
 
   async componentDidMount() {
-
-     await this._loadData(this.props.docId);
-
+     await this._loadData(this.props.unitId);
   }
 
   async componentDidUpdate(prevProps, prevState) {
 
-    if( prevProps.docId !== this.props.docId ) {
-      await this._loadData(this.props.docId)
+    if( prevProps.unitId !== this.props.unitId ) {
+      await this._loadData(this.props.unitId)
     }
 
   }
 
 
 
-  async _loadData(docId: String) {
+  async _loadData(unitId: String) {
 
-    if( docId !== this.props.id ) {
+    if( unitId !== this.props.id ) {
       this.setState({
-        docData: database.getUnitById(docId),
-        docId: docId
+        unit: database.getUnitById(unitId),
+        unitId: unitId
       });
     }
 
   }
 
   addGroup() {
-      this.props.history.push(`/dashboard/addgroup/${this.state.docId}/0`);
+      this.props.history.push(`/dashboard/addgroup/${this.props.unitId}/0`);
   }
 
   render() {
@@ -136,44 +134,44 @@ class Unit extends React.Component<Props, State> {
                       <Row>
                         <Col md='3' className='text-left'>
                           <label className='form-control-label'>שם</label>
-                          <div>{this.state.docData.name_he}</div>
+                          <div>{this.state.unit.unitName}</div>
                         </Col>
                         <Col md='3' className='text-left'>
                           <label className='form-control-label'>רשות</label>
-                          <div>{this.state.docData.authority}</div>
+                          <div>{this.state.unit.authority}</div>
                         </Col>
                         <Col md='3' className='text-left'>
                           <label className='form-control-label active-label '>זכיין</label>
-                          <div>{this.state.docData.concessionaire}</div>
+                          <div>{this.state.unit.concessionaire}</div>
                         </Col>
                         <Col md='3' className='text-left'>
                           <label className='form-control-label'>סמל</label>
-                          <div>{this.state.docData.symbol}</div>
+                          <div>{this.state.unit.symbol}</div>
                         </Col>
                       </Row>
                       <br />
                       <Row>
                         <Col md='3' className='text-left'>
                           <label className='form-control-label'>סוג</label>
-                          <div>{this.state.docData.type}</div>
+                          <div>{this.state.unit.type}</div>
                         </Col>
                         <Col md='3' className='text-left'>
                           <label className='form-control-label'>סוג חינוך</label>
-                          <div>{this.state.docData.education_type}</div>
+                          <div>{this.state.unit.education_type}</div>
                         </Col>
                         <Col md='3' className='text-left'>
                           <label className='form-control-label'>אישור יוח"א</label>
-                          <Input type='radio' checked readOnly value={this.state.docData.long_day_permit}
+                          <Input type='radio' checked readOnly value={this.state.unit.long_day_permit}
                                 className='form-control'/>
                         </Col>
                         <Col md='3' className='text-left'>
                           <label className='form-control-label'>סטאטוס</label>
-                          <div>{this.state.docData.status}</div>
+                          <div>{this.state.unit.status}</div>
                         </Col>
                       </Row>
                     </div>
                     <div id='updates' className='tab-pane' role='tabpanel'>
-                      <UnitUpdates docId={this.state.docId} />
+                      <UnitUpdates unitId={this.props.unitId} />
                     </div>
                     <div id='groups' className='tab-pane active' role='tabpanel'>
 
@@ -188,7 +186,7 @@ class Unit extends React.Component<Props, State> {
                               </Button>
                               </div>
                           </div>
-                          <UnitGroups docId={this.state.docId} />
+                          <UnitGroups unitId={this.props.unitId} />
 
                         </div>
 

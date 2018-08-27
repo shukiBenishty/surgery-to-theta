@@ -283,21 +283,21 @@ exports.getAllAuthorities = () => { return Object.values(authorities); };
 // Get and return all Pupils
 exports.getAllPupilsInGroup = (groupId) => {
     return Object.values(groups[groupId].metadata.pupils).map(( pupil )=> {
-      return pupils[pupil];
+      return pupils[pupil.pupilId];
     })
 };
 
 // Get and return all Groups
 exports.getAllGroupsInUnit = (unitId) => {
   return Object.values(units[unitId].metadata.groups).map(( group )=> {
-    return groups[group];
+    return groups[group.groupId];
   })
 };
 
 // Get and return all Units
 exports.getAllUnitsInAuthority = (authorityId) => {
   return Object.values(authorities[authorityId].units).map(( unit )=> {
-    return units[unit];
+    return units[unit.unitId];
   })
 };
 

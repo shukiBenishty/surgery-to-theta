@@ -62,18 +62,11 @@ class AddGroup extends React.Component<{}, State> {
     let unitName = '<Unknown>';
 
     try {
-      const docData = database.getUnitById(unitId);
+      let _unit = database.getUnitById(unitId);
 
-      const _unit = {
-        name_he: docData.name_he,
-        type: docData.type,
-        authority: docData.authority,
-        cluster: ( docData.cluster || 3 ),
-        education_type: docData.education_type,
-        region: ( docData.region || 'מרכז'),
-        symbol: docData.symbol,
-        sec_role: docData.sec_role
-      }
+      //// way we need this ??????
+      _unit.cluster = ( docData.cluster || 3 );
+      _unit.region = ( docData.region || 'מרכז');
 
       this.setState({
         unit: _unit
@@ -268,7 +261,7 @@ class AddGroup extends React.Component<{}, State> {
       // 4 - Close
 
       const description = ( this.state.unit.type.trim() != "גן" ) ?
-                           this.state.unit.name_he + group.name :
+                           this.state.unit.unitName + group.name :
                            group.name;
 
       const data2post = {
@@ -279,14 +272,14 @@ class AddGroup extends React.Component<{}, State> {
         "paymentInstallments": group.paymentInstallments
       };
 
-      await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
-        // headers: {
-        //     "Content-Type": "application/json",
-        // },
-        mode: 'no-cors', // no-cors prevents reading the response
-        method: 'POST',
-        body: JSON.stringify(data2post)
-      });
+      // await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
+      //   // headers: {
+      //   //     "Content-Type": "application/json",
+      //   // },
+      //   mode: 'no-cors', // no-cors prevents reading the response
+      //   method: 'POST',
+      //   body: JSON.stringify(data2post)
+      // });
 
       // Add new or update group to/in Firestore
       if( this.props.match.params.groupid === '0' ) {
@@ -362,7 +355,7 @@ class AddGroup extends React.Component<{}, State> {
       captionText = 'עריכת נתוני כיתה למוסד'
     }
 
-    captionText += (' ' + this.state.unit.name_he);
+    captionText += (' ' + this.state.unit.unitName);
 
     let isThisField = this.state.invalidField === 'symbol';
     const groupSymbolClassNames = classNames({

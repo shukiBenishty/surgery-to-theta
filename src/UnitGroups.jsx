@@ -12,7 +12,7 @@ import database from './firebase-database.js'
 
 
 type Props = {
-  docId: String
+  unitId: String
 }
 
 type Group = {
@@ -52,9 +52,8 @@ class UnitGroups extends React.Component<Props, State> {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-  // componentDidUpdate(prevProps: Props, prevState: State) {
-    if( nextProps.docId !== this.props.docId) {
-      ::this._loadcData(nextProps.docId)
+    if( nextProps.groups !== this.props.groups) {
+      ::this._loadcData()
     }
     if(nextState !== this.state){
       return true;
@@ -69,10 +68,15 @@ class UnitGroups extends React.Component<Props, State> {
       this.unregisterCollectionObserver();
     }
   }
+  componentDidMount() {
+    ::this._loadcData(this.props.unitId)
+}
 
-  _loadcData(docId: String) {
+
+  _loadcData() {
     const isAdmin = this.props.isAdmin;
-    ::this.groupsFromDocs(database.getAllGroupsInUnit(this.props.docId), isAdmin);
+    let _groups = database.getAllGroupsInUnit(this.props.unitId);
+    ::this.groupsFromDocs(_groups, isAdmin);
   }
 
   groupsFromDocs(docs, isAdmin: Boolean) {
@@ -80,34 +84,15 @@ class UnitGroups extends React.Component<Props, State> {
     let _groups: Group[] = [];
 
     docs.forEach( (group, index) => {
-
-      let data = group;
-
-        let _isClosed = data.isClosed;
-
-        // let _openDate= ( data.openFrom ) ?
-        //               moment.unix(data.openFrom.seconds).format('DD/MM/YYYY') :
-        //               '<none>';
-
-        // let _openTillDate = ( data.openTill ) ?
-        //                 moment.unix(data.openTill.seconds).format('DD/MM/YYYY') :
-        //                 '<none>';
-
-        let registeredPupils = ( data.registeredPupils ) ? data.registeredPupils : 0;
+        let registeredPupils = ( group.registeredPupils ) ? group.registeredPupils : 0;
 
         _groups.push({
-          id: group.groupId,
-          name: data.name,
-          symbol: data.symbol,
-          openFrom: group.openFrom,
-          openTill: group.openTill,
-          isClosed: _isClosed,
-          price: data.price + ' ₪',
-          capacity: data.capacity,
+          ...group,
+          id: group.metadata.groupId,
+          price: group.price + ' ₪',
           registeredPupils: registeredPupils,
           isAdmin: isAdmin
         });
-      //}
 
     });
 
@@ -115,7 +100,6 @@ class UnitGroups extends React.Component<Props, State> {
       groups: _groups,
       dataStatus: _groups.length == 0 ? 'No Groups are allowed to view for this account'
                                       : this.state.dataStatus
-
     });
 
   }
@@ -187,7 +171,7 @@ class UnitGroups extends React.Component<Props, State> {
       //   body: JSON.stringify(data2post)
       // })
 
-      database.updateGroup(this.props.docId, groupData.id, {
+      database.updateGroup(this.props.unitId, groupData.id, {
                                           isClosed: groupData.isClosed
                                         });
 
@@ -199,13 +183,13 @@ class UnitGroups extends React.Component<Props, State> {
 
   onRowSelected = (rowInfo) => {
     if( rowInfo ) {
-      this.props.history.push(`/dashboard/group/${this.props.docId}/${rowInfo.original.id}`);
+      this.props.history.push(`/dashboard/group/${this.props.unitId}/${rowInfo.original.id}`);
     }
   }
 
   editGroup(groupId: String) {
     //console.log(`UnitId: ${this.props.docId}. GroupId: ${groupId}`);
-    this.props.history.push(`/dashboard/addgroup/${this.props.docId}/${groupId}`);
+    this.props.history.push(`/dashboard/addgroup/${this.props.unitId}/${groupId}`);
   }
 
   toggleModal(groupId: String) {
@@ -221,7 +205,7 @@ class UnitGroups extends React.Component<Props, State> {
       modal: !this.state.modal
     });
 
-    database.deleteGroupById(this.props.docId, this.state.groupId2Delete);
+    database.deleteGroupById(this.props.unitId, this.state.groupId2Delete);
 
   }
 

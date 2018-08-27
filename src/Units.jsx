@@ -14,10 +14,7 @@ import { Button, Card, CardBody, Row, Col } from 'reactstrap';
 
 type State = {
   units: [],
-  selectedUnit: {
-    unitName: String,
-    id: String
-  },
+  selectedUnit: Unit,
   selectedRowIndex: Number,
   dropdownOpen: boolean,
   dataStatus: string
@@ -38,7 +35,9 @@ class Units extends React.Component<{}, State> {
     units: [],
     selectedUnit: {
       unitName: '',
-      id: ''
+      metadata: {
+        unitId: ''
+      },
     },
     selectedRowIndex: -1,
     dropdownOpen: false,
@@ -51,26 +50,14 @@ class Units extends React.Component<{}, State> {
      }));
   }
 
-  async componentDidMount(prevProps: Props, prevState: State) {
-
-    if( this.props.units !== prevProps.units ||
-      this.props.isAdmin !== prevProps.isAdmin) {
-      const self = this;
-
+  async componentDidMount() {
       const _units = this.props.units;
-      // this.props.units.forEach( (unit) => {
-      //     _units.push({
-      //       ...unit,
-      //       id: unit.metadata.unitId
-      //     });
-      // });
-
       this.setState({
         units: _units,
         dataStatus: _units.length == 0 ? 'No Units are allowed to view for this account'
                                         : this.state.dataStatus
       })
-    }
+  
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -106,11 +93,15 @@ class Units extends React.Component<{}, State> {
 
   onRowSelected = (rowInfo) => {
 
+    // this.setState({
+    //   selectedUnit: {
+    //     unitName: rowInfo.original.unitName,
+    //     id: rowInfo.original.metadata.unitId
+    //   },
+    //   selectedRowIndex: rowInfo.index
+    // });
     this.setState({
-      selectedUnit: {
-        unitName: rowInfo.original.unitName,
-        id: rowInfo.original.metadata.unitId
-      },
+      selectedUnit: rowInfo.original,
       selectedRowIndex: rowInfo.index
     });
   }
@@ -123,8 +114,8 @@ class Units extends React.Component<{}, State> {
   render() {
 
     let unit = (this.state.selectedUnit.metadata &&
-                this.state.selectedUnit.metadata.unitId == '' ? null
-                : <Unit docId={this.state.selectedUnit.metadata.unitId} />
+                this.state.selectedUnit.metadata.unitId) == '' ? null
+                : <Unit unitId={this.state.selectedUnit.metadata.unitId} />
 
     const self = this;
 
@@ -216,7 +207,7 @@ class Units extends React.Component<{}, State> {
                                     return (
                                       <div style={{ padding: "20px" }}>
                                           <br />
-                                          <Unit docId={row.original.metadata.unitId} />
+                                          <Unit unitId={row.original.metadata.unitId} />
                                       </div>
                                     )
                                   }}>
