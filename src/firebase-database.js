@@ -22,7 +22,7 @@ const trimObjectProperties = (objectToTrim) => {
     }
 }
 
-
+//
 // const initAuthorities = () => {
 //   authoritiesRef.onSnapshot( _authorities => {
 //       _authorities.docChanges().forEach((authority) => {
@@ -31,6 +31,8 @@ const trimObjectProperties = (objectToTrim) => {
 //         }
 //         else {
 //           authorities[authority.doc.id] = authority.doc.data();
+//           authorities[authority.doc.id].metadata = {};
+//           authorities[authority.doc.id].metadata.authorityId = authority.doc.id;
 //         }
 //       })
 //       store.dispatch({
@@ -41,7 +43,7 @@ const trimObjectProperties = (objectToTrim) => {
 //       });
 //   })
 // }
-
+//
 // const initUsers = () => {
 //   usersRef.onSnapshot( _users => {
 //       _users.docChanges().forEach((user) => {
@@ -50,7 +52,8 @@ const trimObjectProperties = (objectToTrim) => {
 //         }
 //         else {
 //           users[user.doc.id] = user.doc.data();
-//           users[user.doc.id].userId = user.doc.id;
+//           users[user.doc.id].metadata = {};
+//           users[user.doc.id].metadata.userId = user.doc.id;
 //         }
 //       })
 //       store.dispatch({
@@ -150,72 +153,71 @@ exports.initDatabase =  (uid, role) => {
 //         }
 //         else {
 //           let unitData = unit.doc.data();
-//
+//           let unitMetadata = {};
 //           const unitId = unit.doc.id;
 //           const unitName = unitData.name_he;
 //           const authority = unitData.authority;
-//           unitData.unitId = unitId;
+//           unitMetadata.unitId = unitId;
 //           unitData.unitName = unitName;
 //           let __groups = {};
-//           if (unit.type === "modified") {
-//             __groups = units[unitId].groups;
-//           }
-//           unitData.groups = __groups;
+//           // if (unit.type === "modified") {
+//           //   __groups = units[unitId].groups;
+//           // }
+//           unitMetadata.groups = __groups;
 //           units[unitId] = unitData;
+//           units[unitId].metadata = unitMetadata;
 //           if (unit.type === "added") {
 //              unitsRef.doc(unitId).collection('groups')
 //               .onSnapshot( _groups => {
 //                  _groups.docChanges().forEach( (group) => {
-//                   if (group.type === "removed") {
-//                     delete groups[group.doc.id];
-//                     delete units[unitId].groups[group.doc.id];
-//                   }
-//                   else {
+//                   // if (group.type === "removed") {
+//                   //   delete groups[group.doc.id];
+//                   //   delete units[unitId].groups[group.doc.id];
+//                   // }
 //                     const groupData = group.doc.data();
 //                     const groupId = group.doc.id;
 //                     const groupSymbol = groupData.symbol;
 //                     const groupName = groupData.name;
+//                     let groupMetadata = {};
 //                     let __pupils = {};
-//                     if (group.type === "modified") {
-//                       __pupils = groups[groupId].pupils;
-//                     }
-//                     groupData.pupils = __pupils;
-//                     groupData.unitId = unitId;
+//                     // if (group.type === "modified") {
+//                     //   __pupils = groups[groupId].pupils;
+//                     // }
+//                     groupMetadata.pupils = __pupils;
+//                     groupMetadata.unitId = unitId;
+//                     groupMetadata.groupId = groupId;
 //                     groupData.groupName = groupName;
-//                     groupData.groupId = groupId;
 //                     groupData.openTill = groupData.openTill ? moment.unix(groupData.openTill.seconds).format('DD/MM/YYYY') : '';
 //                     groupData.openFrom = groupData.openFrom ? moment.unix(groupData.openFrom.seconds).format('DD/MM/YYYY') : '';
 //
 //                     groups[groupId] = groupData;
+//                     groups[groupId].metadata = groupMetadata;
 //                     if (group.type === "added") {
-//                       units[unitId].groups[groupId] = { groupId };
+//                       units[unitId].metadata.groups[groupId] = { groupId };
 //                        unitsRef.doc(unitId)
 //                         .collection('groups')
 //                         .doc(groupId).collection('pupils')
 //                         .onSnapshot( _pupils => {
 //                             _pupils.docChanges().forEach( (pupil) => {
-//                             if (pupil.type === "removed") {
-//                               delete pupils[pupil.doc.id];
-//                               delete groups[groupId].pupils[pupil.doc.id];
-//                             }
-//                             else {
+//                             // if (pupil.type === "removed") {
+//                             //   delete pupils[pupil.doc.id];
+//                             //   delete groups[groupId].pupils[pupil.doc.id];
+//                             // }
 //
 //                               const pupilData = pupil.doc.data();
-//                               const id = pupil.doc.id;
-//
-//                               pupilData.id = id;
-//                               pupilData.groupId = groupId;
-//                               pupilData.unitId = unitId;
-//                               pupilData.authority = authority;
+//                               const pupilId = pupil.doc.id;
+//                               let pupilMetadata = {};
+//                               pupilMetadata.pupilId = pupilId;
+//                               pupilMetadata.groupId = groupId;
+//                               pupilMetadata.unitId = unitId;
+//                               pupilMetadata.authority = authority;
 //                               pupilData.birthDay = pupilData.birthDay ? moment.unix(pupilData.birthDay.seconds).format('DD/MM/YYYY') : '';
 //                               pupilData.whenRegistered = pupilData.whenRegistered ? moment.unix(pupilData.whenRegistered.seconds).format('DD/MM/YYYY HH:mm:ss') : ''
-//                               pupils[id]  = pupilData;
-//
+//                               pupils[pupilId]  = pupilData;
+//                               pupils[pupilId].metadata  = pupilMetadata;
 //                               if (pupil.type === "added") {
-//                                 groups[groupId].pupils[id] = { "pupilId": id }
+//                                 groups[groupId].metadata.pupils[pupilId] = { pupilId }
 //                               }
-//
-//                           }
 //                         })
 //
 //                           store.dispatch({
@@ -227,7 +229,6 @@ exports.initDatabase =  (uid, role) => {
 //
 //                       })
 //                     }
-//                   }
 //                 })
 //                   store.dispatch({
 //                     type: 'GROUPS_CHANGED',
@@ -255,7 +256,7 @@ exports.initDatabase =  (uid, role) => {
 //   }
 //   setTimeout( () => {
 //     setupRealDataBase()
-//   }, 1000 * 120);
+//   }, 1000 * 40);
 // };
 
 ////////// get all //////////
@@ -281,22 +282,22 @@ exports.getAllAuthorities = () => { return Object.values(authorities); };
 
 // Get and return all Pupils
 exports.getAllPupilsInGroup = (groupId) => {
-    return Object.values(groups[groupId].pupils).map(( pupil )=> {
-      return pupils[pupil.pupilId];
+    return Object.values(groups[groupId].metadata.pupils).map(( pupil )=> {
+      return pupils[pupil];
     })
 };
 
 // Get and return all Groups
 exports.getAllGroupsInUnit = (unitId) => {
-  return Object.values(units[unitId].groups).map(( group )=> {
-    return groups[group.groupId];
+  return Object.values(units[unitId].metadata.groups).map(( group )=> {
+    return groups[group];
   })
 };
 
 // Get and return all Units
 exports.getAllUnitsInAuthority = (authorityId) => {
   return Object.values(authorities[authorityId].units).map(( unit )=> {
-    return units[unit.unitId];
+    return units[unit];
   })
 };
 
@@ -411,40 +412,58 @@ exports.updateUnit = (unitId, unit) => {
 
 
 
+// Get and return all Units
+exports.changePermissions = (user) => {
+  var updates = {};
+  if(users[user.metadata.userId].permissions){
+    for (var unitId in users[user.metadata.userId].permissions){
+      // update exist permissions
+      if (user.permissions[unitId] !== undefined) {
+          updates = updatePermissionsForAll(updates, user, unitId, user.permissions[unitId]);
+      }
+        // delete exist permissions
+       else {
+          updates = updatePermissionsForAll(updates, user, unitId, null);
+      }
+    }
+    for (var unitId in units){
+      //new permissions
+      if (user.permissions[unitId] !== undefined &&
+          users[user.metadata.userId].permissions[unitId] === undefined) {
+        updates = updatePermissionsForAll(updates, user, unitId, user.permissions[unitId]);
+      }
+    }
+    return firebase.database().ref().update(updates);
+  }
+};
+
+
 // // Get and return all Units
 // exports.changePermissions = (user) => {
-//   const permissionsRef = usersRef.doc(user.userId).collection('permissions');
-  
-//   if(!users[user.userId].permissions){
-//     users[user.userId].permissions = {};
-//   }
-//   var batch = firebase.firestore().batch();
-
-//   for (var unitId in users[user.userId].permissions){
-//     if (user.permissions[unitId] !== undefined) {
-//       batch.update(permissionsRef.doc(unitId), user.permissions[unitId]);
-//     } else {
-//       batch.delete(permissionsRef.doc(unitId));
-//     }
-//   }
-//   for (var unitId in units){
-//     if (user.permissions[unitId] !== undefined && 
-//         users[user.userId].permissions[unitId] === undefined) {
-//       batch.set(permissionsRef.doc(unitId), user.permissions[unitId])
-//     }
-//   }
-//   return batch.commit();
+//   var updates = {}
+//   updates['permissions'] = user.permissions;
+//   return usersRef.doc(user.userId).update(updates);
+//
 // };
 
 
-// Get and return all Units
-exports.changePermissions = (user) => {
-  var updates = {}
-  updates['permissions'] = user.permissions;
-  return usersRef.doc(user.userId).update(updates);
-  
-};
-
+const updatePermissionsForAll = (updates, user, unitId, newPermissions) => {
+  if (unitId === undefined) {
+    console.log('error is hear');
+  }
+  updates[`units/${unitId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
+  for (var groupId in groups){
+    if (groups[groupId].metadata.unitId === unitId) {
+      updates[`groups/${groupId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
+    }
+  }
+  for (var pupilId in pupils){
+    if (pupils[pupilId].metadata.unitId === unitId) {
+      updates[`pupils/${pupilId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
+    }
+  }
+  return updates;
+}
 
 const setupRealDataBase = async () => {
   trimObjectProperties(units);

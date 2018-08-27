@@ -99,7 +99,7 @@ class Pupils extends React.Component<{}, State> {
  loadPupils(isAdmin: Boolean, props) {
     let _pupils = props.pupils.map((pupil) => {
     // pupil.birthDay = pupil.birthDay ? moment.unix(pupil.birthDay.seconds).format('DD/MM/YYYY') : '';
-    let groupSymbol = (this.state.groups && this.state.groups[pupil.groupId]) ? this.state.groups[pupil.groupId].groupSymbol : ''
+    let groupSymbol = (this.state.groups && this.state.groups[pupil.metadata.groupId]) ? this.state.groups[pupil.metadata.groupId].groupSymbol : ''
       return{
         ...pupil,
         groupSymbol:groupSymbol  ,
@@ -285,9 +285,9 @@ class Pupils extends React.Component<{}, State> {
       width: 80,
       Cell: row => {
 
-        const unitId = row.original.unitId;
-        const groupId = row.original.groupId;
-        const pupilRecordId = row.original.id;
+        const unitId = row.original.metadata.unitId;
+        const groupId = row.original.metadata.groupId;
+        const pupilRecordId = row.original.metadata.pupilId;
 
         return <Row>
           <Col md='4'>
@@ -391,7 +391,7 @@ class Pupils extends React.Component<{}, State> {
     const _units = ( authorities.length !== 0 ) ?
                     ( this.state.units.filter( unit => {
                         return authorities.find( authority => {
-                          return authority.name.trim() === unit.authority.trim()}
+                          return authority.name === unit.authority}
                         )
                       })) : this.state.units;
 
@@ -411,13 +411,13 @@ class Pupils extends React.Component<{}, State> {
     } else {
         const incision = unitsFromAuthorities.filter( a_unit => {
           return unitsFromUnits.find( u_unit => {
-            return a_unit.unitId.trim() === u_unit.unitId.trim()}
+            return a_unit.metadata.unitId === u_unit.metadata.unitId}
           )
         });
 
         const _pupils = this.state.pupils.filter( pupil => {
           return incision.find( unit => {
-            return unit.unitId.trim() === pupil.unitId.trim()}
+            return unit.metadata.unitId === pupil.metadata.unitId}
           )
         });
 

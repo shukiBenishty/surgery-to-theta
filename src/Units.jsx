@@ -15,7 +15,7 @@ import { Button, Card, CardBody, Row, Col } from 'reactstrap';
 type State = {
   units: [],
   selectedUnit: {
-    name: String,
+    unitName: String,
     id: String
   },
   selectedRowIndex: Number,
@@ -37,7 +37,7 @@ class Units extends React.Component<{}, State> {
   state = {
     units: [],
     selectedUnit: {
-      name: '',
+      unitName: '',
       id: ''
     },
     selectedRowIndex: -1,
@@ -51,31 +51,19 @@ class Units extends React.Component<{}, State> {
      }));
   }
 
-  async componentDidUpdate(prevProps: Props, prevState: State) {
+  async componentDidMount(prevProps: Props, prevState: State) {
 
     if( this.props.units !== prevProps.units ||
       this.props.isAdmin !== prevProps.isAdmin) {
-
-
       const self = this;
 
-      const _units = [];
-
-      this.props.units.forEach( (unit) => {
-
-          _units.push({
-            name: unit.name_he,
-            education_type: unit.education_type,
-            authority: unit.authority,
-            region: unit.region,
-            cluster: unit.cluster,
-            type: unit.type,
-            symbol: unit.symbol,
-            id: unit.unitId
-          });
-        //}
-
-      });
+      const _units = this.props.units;
+      // this.props.units.forEach( (unit) => {
+      //     _units.push({
+      //       ...unit,
+      //       id: unit.metadata.unitId
+      //     });
+      // });
 
       this.setState({
         units: _units,
@@ -85,6 +73,31 @@ class Units extends React.Component<{}, State> {
     }
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    if( this.props.units !== nextProps.units ||
+      this.props.isAdmin !== nextProps.isAdmin) {
+      const self = this;
+
+      const _units = nextProps.units;
+      // nextProps.units.forEach( (unit) => {
+      //     _units.push({
+      //                   ...unit,
+      //       id: unit.metadata.unitId
+      //     });
+      // });
+
+      this.setState({
+        units: _units,
+        dataStatus: _units.length == 0 ? 'No Units are allowed to view for this account'
+                                        : this.state.dataStatus
+      })
+    }
+    if(nextState !== this.state){
+      return true;
+    } else {
+      return false;
+    }
+  }
   onUnitSelected = (unit) => {
     this.setState({
       selectedUnit: unit
@@ -95,8 +108,8 @@ class Units extends React.Component<{}, State> {
 
     this.setState({
       selectedUnit: {
-        name: rowInfo.original.name,
-        id: rowInfo.original.id
+        unitName: rowInfo.original.unitName,
+        id: rowInfo.original.metadata.unitId
       },
       selectedRowIndex: rowInfo.index
     });
@@ -109,8 +122,9 @@ class Units extends React.Component<{}, State> {
 
   render() {
 
-    let unit = this.state.selectedUnit.id == '' ? null
-                : <Unit docId={this.state.selectedUnit.id} />
+    let unit = (this.state.selectedUnit.metadata &&
+                this.state.selectedUnit.metadata.unitId == '' ? null
+                : <Unit docId={this.state.selectedUnit.metadata.unitId} />
 
     const self = this;
 
@@ -142,7 +156,7 @@ class Units extends React.Component<{}, State> {
       accessor: 'region',
     }, {
       Header: 'שם',
-      accessor: 'name',
+      accessor: 'unitName',
     }, {
       Header: 'סמל',
       accessor: 'symbol',
@@ -202,7 +216,7 @@ class Units extends React.Component<{}, State> {
                                     return (
                                       <div style={{ padding: "20px" }}>
                                           <br />
-                                          <Unit docId={row.original.id} />
+                                          <Unit docId={row.original.metadata.unitId} />
                                       </div>
                                     )
                                   }}>

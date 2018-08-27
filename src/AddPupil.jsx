@@ -167,18 +167,19 @@ class AddPupil extends React.Component<{}, State> {
     try {
       const self = this;
 
-      const _units = [];
+      // const _units = [];
 
-      const units = this.props.units;
-
-      units.forEach( (unit) => {
-        const unitData = unit;
-        _units.push({
-          unitId: unit.unitId,
-          unitName: unitData.name_he,
-          authority: unitData.authority
-        });
-      })
+      // const units = this.props.units;
+      //
+      // units.forEach( (unit) => {
+      //   const unitData = unit;
+      //   _units.push({
+      //     unitId: unit.unitId,
+      //     unitName: unitData.unitName,
+      //     authority: unitData.authority
+      //   });
+      // })
+      const _units = this.props.units;
 
       const _groups = this.props.groups;
 
@@ -227,7 +228,7 @@ class AddPupil extends React.Component<{}, State> {
 
       if( unitId != 0 && groupId  != 0 ) {
           unit = await database.getUnitById(unitId);
-          unit.unitName = unit.name_he;
+          // unit.unitName = unit.name_he;
 
           group = await database.getGroupById(groupId);
         };
@@ -246,9 +247,10 @@ class AddPupil extends React.Component<{}, State> {
           disabledAuthority: true,
           disabledUnit: false,
           disabledGroup: false,
-          selectedAuthority: pupil.authority,
+          selectedAuthority: unit.authority,
           selectedUnit: unit,
           formInalid: false,
+          originalUnit: unit,
           selectedGroup: group
         })
       }
@@ -261,7 +263,7 @@ class AddPupil extends React.Component<{}, State> {
             selectedAuthority: (unit) ? unit.authority : 'אנא בחר רשות' ,
             selectedUnit: (unit) ? unit : 'אנא בחר מוסד' ,
             selectedGroup: (group) ? group :'אנא בחר כיתה' ,
-            disabledAuthority: true,
+            disabledAuthority: false,
             disabledUnit: true,
             disabledGroup: true,
             formInalid: false,
@@ -351,8 +353,8 @@ class AddPupil extends React.Component<{}, State> {
             //draggable: false
         });
 
-            const unitId = this.state.selectedUnit.unitId;
-            const groupId = this.state.selectedGroup.groupId;
+            const unitId = this.state.selectedUnit.metadata.unitId;
+            const groupId = this.state.selectedGroup.metadata.groupId;
 
             if(this.props.match.params.pupilid != 0) {
 
@@ -418,11 +420,11 @@ class AddPupil extends React.Component<{}, State> {
 
     const _groups = this.state.groups.filter( group => {
       return _units.find( unit => {
-        return unit.unitId === group.unitId
+        return unit.metadata.unitId === group.metadata.unitId
       })
     });
 
-    this.state.pupil.authority = authority.name;
+    // this.state.pupil.authority = authority.name;
       // disabledUnit: false,
     this.setState({
 
@@ -437,12 +439,12 @@ class AddPupil extends React.Component<{}, State> {
 
   unitChanged = (unit) => {
     const _groups = this.state.groups.filter( group => {
-        return unit.unitId === group.unitId
+        return unit.metadata.unitId === group.metadata.unitId
       });
 
 
-    this.state.pupil.unitId = unit.unitId;
-    this.state.pupil.unitName = unit.unitName;
+    this.state.pupil.metadata.unitId = unit.metadata.unitId;
+    // this.state.pupil.unitName = unit.unitName;
     this.setState({
       disabledGroup: (this.state.componentState === 'edit') ? false : true,
       filterdGroups: _groups,
@@ -453,7 +455,7 @@ class AddPupil extends React.Component<{}, State> {
   }
 
   groupChanged = (group) => {
-    this.state.pupil.groupId = group.groupId;
+    this.state.pupil.metadata.groupId = group.metadata.groupId;
     this.state.pupil.groupName = group.groupName;
     this.setState({
       selectedGroup: group,

@@ -44,7 +44,8 @@ const reducers = (state = INITIAL_STATE, action) => {
                                     isAdmin: action.data.isAdmin
                                   });
     }
-
+    break;
+    
     case 'UNITS_CHANGED': {
       state = _.assign({}, state, {
                                     units: action.data.units

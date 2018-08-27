@@ -32,16 +32,16 @@ class UserList extends React.Component<{}, State> {
 
       const _users = [];
 
-      this.props.users.forEach( (_data) => {
-        _users.push({
-          userId: _data.userId,
-          first_name: _data.first_name,
-          last_name: _data.last_name,
-          email: _data.email,
-          role: _data.role
-        });
-
-      });
+      // this.props.users.forEach( (_data) => {
+      //   _users.push({
+      //     userId: _data.metadata.userId,
+      //     first_name: _data.first_name,
+      //     last_name: _data.last_name,
+      //     email: _data.email,
+      //     role: _data.role
+      //   });
+      //
+      // });
 
       this.setState({
         loading: false,
@@ -128,11 +128,11 @@ class UserList extends React.Component<{}, State> {
                   ofText = 'מתוך'
                   rowsText = 'שורות'
                   SubComponent={ row => {
-                    console.log(row.original.userId);
+                    console.log(row.original.metadata.userId);
                     return (
                       <div style={{ padding: "20px" }}>
                           <br />
-                          <UserPermissions userId={row.original.userId} />
+                          <UserPermissions userId={row.original.metadata.userId} />
                       </div>
                     )
                   }}

@@ -28,7 +28,7 @@ const deepCopy = (mainObj) => {
   let key;
 
   for (key in mainObj) {
-    objCopy[key] = mainObj[key]; 
+    objCopy[key] = mainObj[key];
   }
   return objCopy;
 }
@@ -138,13 +138,13 @@ class UserPermissions extends React.Component<{}, State> {
         let readForAll = self.state.readForAll;
         user.permissions = (user.permissions) ? user.permissions : {};
         if (item.symbol !== "סמל מוסד") {
-          user.permissions[item.unitId] = (user.permissions[item.unitId]) ? user.permissions[item.unitId] : {};
-          user.permissions[item.unitId].read = e.target.checked;
+          user.permissions[item.metadata.unitId] = (user.permissions[item.metadata.unitId]) ? user.permissions[item.metadata.unitId] : {};
+          user.permissions[item.metadata.unitId].read = e.target.checked;
         } else {
           readForAll = e.target.checked;
           self.props.units.forEach((unit)=>{
-            user.permissions[unit.unitId] = (user.permissions[unit.unitId]) ? user.permissions[unit.unitId] : {};
-            user.permissions[unit.unitId].read = e.target.checked;
+            user.permissions[unit.metadata.unitId] = (user.permissions[unit.metadata.unitId]) ? user.permissions[unit.metadata.unitId] : {};
+            user.permissions[unit.metadata.unitId].read = e.target.checked;
           })
         }
         self.setState({
@@ -160,13 +160,13 @@ class UserPermissions extends React.Component<{}, State> {
       let writeForAll = self.state.writeForAll;
       user.permissions = (user.permissions) ? user.permissions : {};
       if (item.symbol !== "סמל מוסד") {
-        user.permissions[item.unitId] = (user.permissions[item.unitId]) ? user.permissions[item.unitId] : {};
-        user.permissions[item.unitId].write = e.target.checked;
+        user.permissions[item.metadata.unitId] = (user.permissions[item.metadata.unitId]) ? user.permissions[item.metadata.unitId] : {};
+        user.permissions[item.metadata.unitId].write = e.target.checked;
       } else {
         writeForAll = e.target.checked;
         self.props.units.forEach((unit)=>{
-          user.permissions[unit.unitId] = (user.permissions[unit.unitId]) ? user.permissions[unit.unitId] : {};
-          user.permissions[unit.unitId].write = e.target.checked;
+          user.permissions[unit.metadata.unitId] = (user.permissions[unit.metadata.unitId]) ? user.permissions[unit.metadata.unitId] : {};
+          user.permissions[unit.metadata.unitId].write = e.target.checked;
         })
       }
       self.setState({
@@ -178,14 +178,13 @@ class UserPermissions extends React.Component<{}, State> {
 
     let read = false;
     let write = false;
-    if (self.state.user &&
-        self.state.user.permissions && self.state.user.permissions[item.unitId]) {
-          read = (self.state.user.permissions[item.unitId].read ) ? true : false;
-          write = (self.state.user.permissions[item.unitId].write ) ? true : false;
-    }
     if (item.symbol === "סמל מוסד" ) {
       read = self.state.readForAll,
       write = self.state.writeForAll
+    }else if (self.state.user &&
+        self.state.user.permissions && self.state.user.permissions[item.metadata.unitId]) {
+          read = (self.state.user.permissions[item.metadata.unitId].read ) ? true : false;
+          write = (self.state.user.permissions[item.metadata.unitId].write ) ? true : false;
     }
 
     return (

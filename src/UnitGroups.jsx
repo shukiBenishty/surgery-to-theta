@@ -51,32 +51,28 @@ class UnitGroups extends React.Component<Props, State> {
     groupId2Delete: ''
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
-
-    if( prevProps.docId !== this.props.docId) {
-
-      ::this._loadcData(this.props.docId)
+  shouldComponentUpdate(nextProps, nextState) {
+  // componentDidUpdate(prevProps: Props, prevState: State) {
+    if( nextProps.docId !== this.props.docId) {
+      ::this._loadcData(nextProps.docId)
     }
-
+    if(nextState !== this.state){
+      return true;
+    } else {
+      return false;
+    }
   }
 
   componentWillUnmount() { // is called upon closing
                            // each expander in Units.jsx
-
     if( this.unregisterCollectionObserver ) {
       this.unregisterCollectionObserver();
     }
-
   }
 
   _loadcData(docId: String) {
-
-
-
     const isAdmin = this.props.isAdmin;
-
     ::this.groupsFromDocs(database.getAllGroupsInUnit(this.props.docId), isAdmin);
-
   }
 
   groupsFromDocs(docs, isAdmin: Boolean) {
@@ -182,14 +178,14 @@ class UnitGroups extends React.Component<Props, State> {
         "price": groupData.price
       };
 
-      await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
-        // headers: {
-        //     "Content-Type": "application/json",
-        // },
-        mode: 'no-cors',
-        method: 'POST',
-        body: JSON.stringify(data2post)
-      })
+      // await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
+      //   // headers: {
+      //   //     "Content-Type": "application/json",
+      //   // },
+      //   mode: 'no-cors',
+      //   method: 'POST',
+      //   body: JSON.stringify(data2post)
+      // })
 
       database.updateGroup(this.props.docId, groupData.id, {
                                           isClosed: groupData.isClosed

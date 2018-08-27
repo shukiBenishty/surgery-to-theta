@@ -43,6 +43,7 @@ type State = {
 const mapStateToProps = (state) => {
   return {
     groups: state.groups,
+    units: state.units,
     authorities: state.authorities,
     isAdmin: state.isAdmin
   }
@@ -63,31 +64,46 @@ class Groups extends React.Component<{}, State> {
 
   }
 
-  async loadAuthorities() {
+  async loadAuthorities(authorities) {
     this.setState({
-      authorities: this.props.authorities,
+      authorities: authorities,
       authoritiesLoaded: true
     })
   }
 
-  async loadGroups() {
+  async loadGroups(groups, units) {
 
     try {
-      let _groups = this.props.groups.map(( group) => {
-        
+      let _groups = groups.map(( group) => {
+
           // const openTill = group.openTill ?
           //                 moment.unix(group.openedTill.seconds).format('DD/MM/YYYY') :
-          //     
+          //
 
+          // return {
+          //   id: group.groupId,
+          //   unitId: group.unitId,
+          //   name: group.name,
+          //   symbol: group.symbol,
+          //   openTill: group.openTill,
+          //   openFrom: group.openFrom,
+          //   unitName: group.unitName,
+          //   authority: group.authority,
+          //   price: group.price,
+          //   capacity: group.capacity,
+          //   isAdmin: this.props.isAdmin
+          // };
+          let _unit = units[group.metadata.unitId];
+          let _authority = (_unit) ? _unit.authority : undefined;
           return {
-            id: group.groupId,
-            unitId: group.unitId,
+            id: group.metadata.groupId,
+            unitId: group.metadata.unitId,
             name: group.name,
             symbol: group.symbol,
             openTill: group.openTill,
             openFrom: group.openFrom,
             unitName: group.unitName,
-            authority: group.authority,
+            authority: _authority,
             price: group.price,
             capacity: group.capacity,
             isAdmin: this.props.isAdmin
@@ -105,16 +121,22 @@ class Groups extends React.Component<{}, State> {
 
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
+  componentDidMount(){
+    ::this.loadGroups(this.props.groups, this.props.units);
+    ::this.loadAuthorities(this.props.authorities);
+  }
 
-    if( prevProps.isAdmin !== this.props.isAdmin ||
-        prevProps.groups !== this.props.groups) {
-        ::this.loadGroups();
+  shouldComponentUpdate(nextProps, nextState) {
+
+    if( nextProps.isAdmin !== this.props.isAdmin ||
+        nextProps.groups !== this.props.groups ||
+        nextProps.units !== this.props.units) {
+        ::this.loadGroups(nextProps.groups, this.props.units);
     }
-    if (prevProps.authorities !== this.props.authorities){
-      ::this.loadAuthorities();
+    if (nextProps.authorities !== this.props.authorities){
+      ::this.loadAuthorities(nextProps.authorities);
     }
-    if(prevState !== this.state){
+    if(nextState !== this.state){
       return true;
     } else {
       return false;
