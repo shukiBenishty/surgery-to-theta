@@ -1,6 +1,9 @@
 import firebase from './firebase.js';
 import {store} from './index.jsx';
 import moment from 'moment';
+const uuidv4 = require('uuid/v4');
+
+var serviceAccount = require("./pupilsM.json");
 
 const unitsRef = firebase.firestore().collection('units');
 const authoritiesRef = firebase.firestore().collection('authorities');
@@ -30,48 +33,109 @@ const trimObjectProperties = (objectToTrim) => {
     }
 }
 
-//
-// const initAuthorities = () => {
-//   authoritiesRef.onSnapshot( _authorities => {
-//       _authorities.docChanges().forEach((authority) => {
-//         if (authority.type === "removed") {
-//           delete authorities[authority.doc.id];
+
+const initAuthorities = () => {
+  authoritiesRef.onSnapshot( _authorities => {
+      _authorities.docChanges().forEach((authority) => {
+        if (authority.type === "removed") {
+          delete authorities[authority.doc.id];
+        }
+        else {
+          authorities[authority.doc.id] = authority.doc.data();
+          authorities[authority.doc.id].metadata = {};
+          authorities[authority.doc.id].metadata.authorityId = authority.doc.id;
+        }
+      })
+      store.dispatch({
+        type: 'AUTHORITIES_CHANGED',
+        data: {
+          authorities: Object.values(authorities)
+        }
+      });
+  })
+}
+
+const initUsers = () => {
+  usersRef.onSnapshot( _users => {
+      _users.docChanges().forEach((user) => {
+        if (user.type === "removed") {
+          delete users[user.doc.id];
+        }
+        else {
+          users[user.doc.id] = user.doc.data();
+          users[user.doc.id].metadata = {};
+          users[user.doc.id].metadata.userId = user.doc.id;
+        }
+      })
+      store.dispatch({
+        type: 'AUTHORITIES_CHANGED',
+        data: {
+          users: Object.values(users)
+        }
+      });
+  })
+}
+
+// const checkDB = () => {
+//   var updates = {};
+//   let count = 0 ;
+//   let countError1 = 0 ;
+//   let countError2 = 0 ;
+//   serviceAccount.forEach(function(pupil) {
+//     try {
+//       if(pupil.sent_successfully === "ok"){
+//         if(pupil.groupSymbol === 416545){
+//           countError1++;
+//           pupil.groupSymbol = 4165451;
 //         }
-//         else {
-//           authorities[authority.doc.id] = authority.doc.data();
-//           authorities[authority.doc.id].metadata = {};
-//           authorities[authority.doc.id].metadata.authorityId = authority.doc.id;
+//         if(pupil.groupSymbol === 713396){
+//           countError2++;
+//           pupil.groupSymbol = 713369;
 //         }
-//       })
-//       store.dispatch({
-//         type: 'AUTHORITIES_CHANGED',
-//         data: {
-//           authorities: Object.values(authorities)
+//         let _pupil = {
+//           address: "",
+//           pupilId: pupil.pupilId,
+//           birthDay: moment(pupil.DateOfBirth, "YYYY-MM-DD HH:mm:ss").format('DD/MM/YYYY'), ////
+//           name: pupil.name,
+//           lastName: pupil.family,
+//           parentId: pupil.parentId,
+//           phoneNumber: pupil.phoneNumber,
+//           whenRegistered: moment(pupil.whenRegistered, "YYYY-MM-DD HH:mm:ss").format('DD/MM/YYYY HH:mm:ss'), ///
+//           medicalLimitations: pupil.medicalLimitations,
+//           paymentApprovalNumber: pupil.PaymentConfirmationNumber,
+//           payerName: pupil.name_pay,
+//           registrationSource: pupil.registration_source,
+//           status: pupil.status
 //         }
-//       });
-//   })
-// }
-//
-// const initUsers = () => {
-//   usersRef.onSnapshot( _users => {
-//       _users.docChanges().forEach((user) => {
-//         if (user.type === "removed") {
-//           delete users[user.doc.id];
-//         }
-//         else {
-//           users[user.doc.id] = user.doc.data();
-//           users[user.doc.id].metadata = {};
-//           users[user.doc.id].metadata.userId = user.doc.id;
-//         }
-//       })
-//       store.dispatch({
-//         type: 'AUTHORITIES_CHANGED',
-//         data: {
-//           users: Object.values(users)
-//         }
-//       });
-//   })
-// }
+//         trimObjectProperties(_pupil);
+//         let pupilId = uuidv4(); 
+//         let _group = Object.values(groups).find( group => {
+//           return group.symbol == pupil.groupSymbol}
+//         )
+//         if(_group){  
+//           count++;
+//           _pupil.metadata = {};
+//           _pupil.metadata.pupilId = pupilId;
+//           _pupil.metadata.groupId = _group.metadata.groupId;
+//           _pupil.metadata.unitId = _group.metadata.unitId;
+//           _pupil.metadata.authority = _group.metadata.authority;
+//           updates[`pupils/${pupilId}`] = _pupil;
+//           updates[`groups/${_group.metadata.groupId}/metadata/pupils/${pupilId}`] = pupilId;
+//         } 
+        
+//       }
+//     } catch (error) {
+//       console.log(error);
+//     }
+//   });
+//   console.log("pupils num:"+ count);
+//   console.log("countError1: "+ countError1);
+//   console.log("countError2: "+ countError2);
+//   firebase.database().ref().update(updates);
+//   // console.log(updates);
+// };
+
+
 
 exports.initDatabase =  (uid, role) => {
   try {
@@ -141,7 +205,12 @@ exports.initDatabase =  (uid, role) => {
       }
     }));
 
-    Promise.all(promises);
+    Promise.all(promises).then(()=>{
+      // setTimeout( () => {
+      //       checkDB();
+      // }, 1000 * 15);
+      
+    });
   } catch( err ) {
       console.error(err);
   }
@@ -190,10 +259,11 @@ exports.initDatabase =  (uid, role) => {
 //                     groupMetadata.pupils = __pupils;
 //                     groupMetadata.unitId = unitId;
 //                     groupMetadata.groupId = groupId;
+//                     groupMetadata.authority = authority;
 //                     groupData.groupName = groupName;
 //                     groupData.openTill = groupData.openTill ? moment.unix(groupData.openTill.seconds).format('DD/MM/YYYY') : '';
 //                     groupData.openFrom = groupData.openFrom ? moment.unix(groupData.openFrom.seconds).format('DD/MM/YYYY') : '';
-//
+
 //                     groups[groupId] = groupData;
 //                     groups[groupId].metadata = groupMetadata;
 //                     if (group.type === "added") {
@@ -207,7 +277,7 @@ exports.initDatabase =  (uid, role) => {
 //                             //   delete pupils[pupil.doc.id];
 //                             //   delete groups[groupId].pupils[pupil.doc.id];
 //                             // }
-//
+
 //                               const pupilData = pupil.doc.data();
 //                               const pupilId = pupil.doc.id;
 //                               let pupilMetadata = {};
@@ -219,18 +289,18 @@ exports.initDatabase =  (uid, role) => {
 //                               pupilData.whenRegistered = pupilData.whenRegistered ? moment.unix(pupilData.whenRegistered.seconds).format('DD/MM/YYYY HH:mm:ss') : ''
 //                               pupils[pupilId]  = pupilData;
 //                               pupils[pupilId].metadata  = pupilMetadata;
-//                               if (pupil.type === "added") {
-//                                 groups[groupId].metadata.pupils[pupilId] = { pupilId }
-//                               }
+//                               // if (pupil.type === "added") {
+//                               //   groups[groupId].metadata.pupils[pupilId] = { pupilId }
+//                               // }
 //                         })
-//
+
 //                           store.dispatch({
 //                             type: 'PUPILS_CHANGED',
 //                             data: {
 //                               pupils: Object.values(pupils)
 //                             }
 //                           });
-//
+
 //                       })
 //                     }
 //                 })
@@ -240,7 +310,7 @@ exports.initDatabase =  (uid, role) => {
 //                       groups: Object.values(groups)
 //                     }
 //                   });
-//
+
 //               }
 //             )
 //           }
@@ -260,7 +330,7 @@ exports.initDatabase =  (uid, role) => {
 //   }
 //   setTimeout( () => {
 //     setupRealDataBase()
-//   }, 1000 * 40);
+//   }, 1000 * 60);
 // };
 
 ////////// get all //////////
