@@ -13,3 +13,8 @@ node_modules/
 dist
 yarn.lock
 *.lock
+firebase.json
+database.rules.json
+.firebaserc
+firestore.indexes.json
+firestore.rules

@@ -108,11 +108,11 @@ const initUsers = () => {
 //           status: pupil.status
 //         }
 //         trimObjectProperties(_pupil);
-//         let pupilId = uuidv4(); 
+//         let pupilId = uuidv4();
 //         let _group = Object.values(groups).find( group => {
 //           return group.symbol == pupil.groupSymbol}
 //         )
-//         if(_group){  
+//         if(_group){
 //           count++;
 //           _pupil.metadata = {};
 //           _pupil.metadata.pupilId = pupilId;
@@ -121,8 +121,8 @@ const initUsers = () => {
 //           _pupil.metadata.authority = _group.metadata.authority;
 //           updates[`pupils/${pupilId}`] = _pupil;
 //           updates[`groups/${_group.metadata.groupId}/metadata/pupils/${pupilId}`] = pupilId;
-//         } 
-        
+//         }
+
 //       }
 //     } catch (error) {
 //       console.log(error);
@@ -210,7 +210,7 @@ exports.initDatabase =  (uid, role) => {
       // setTimeout( () => {
       //       checkDB();
       // }, 1000 * 15);
-      
+
     });
   } catch( err ) {
       console.error(err);
@@ -357,22 +357,22 @@ exports.getAllAuthorities = () => { return Object.values(authorities); };
 
 // Get and return all Pupils
 exports.getAllPupilsInGroup = (groupId) => {
-    return Object.values(groups[groupId].metadata.pupils).map(( pupil )=> {
-      return pupils[pupil.pupilId];
+    return Object.values(groups[groupId].metadata.pupils).map(( pupilId )=> {
+      return pupils[pupilId];
     })
 };
 
 // Get and return all Groups
 exports.getAllGroupsInUnit = (unitId) => {
-  return Object.values(units[unitId].metadata.groups).map(( group )=> {
-    return groups[group.groupId];
+  return Object.values(units[unitId].metadata.groups).map(( groupId )=> {
+    return groups[groupId];
   })
 };
 
 // Get and return all Units
 exports.getAllUnitsInAuthority = (authorityId) => {
-  return Object.values(authorities[authorityId].units).map(( unit )=> {
-    return units[unit.unitId];
+  return Object.values(authorities[authorityId].metadata.units).map(( unitId )=> {
+    return units[unitId];
   })
 };
 
@@ -446,21 +446,54 @@ exports.deleteUnitById = (unitId) => {
 
 // Get and return all Pupils
 exports.addPupil = (unitId, groupId, pupil) => {
-  unitsRef.doc(unitId).collection('groups')
-    .doc(groupId).collection('pupils')
-    .add(pupil)
+  let updates = {}
+  let unit = units[unitId];
+  let pupilId = uuidv4();
+  try {
+    pupil.metadata = {};
+    pupil.metadata.authority = unit.authority;
+    pupil.metadata.unitId = unitId;
+    pupil.metadata.groupId = groupId;
+    pupil.metadata.pupilId = pupilId;
+    updates[`pupils/${pupilId}`] = pupil;
+    updates[`groups/${groupId}/metadata/pupils/${pupilId}`] = pupilId;
+    updates[`groups/${groupId}/registeredPupils`] = groups[groupId].registeredPupils + 1;
+    return firebase.database().ref().update(updates);
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 // Get and return all Groups
 exports.addGroup = (unitId, group) => {
-  unitsRef.doc(unitId)
-          .collection('groups')
-          .add(group);
+  let updates = {}
+  let unit = units[unitId];
+  let groupId = uuidv4();
+  try {
+    group.metadata = {};
+    group.metadata.authority = unit.authority;
+    group.metadata.unitId = unitId;
+    group.metadata.groupId = groupId;
+    updates[`groups/${groupId}`] = group;
+    updates[`units/${unitId}/metadata/groups/${groupId}`] = groupId
+    return firebase.database().ref().update(updates);
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 // Get and return all Units
 exports.addUnit = (unit) => {
-  unitsRef.add(unit);
+  let updates = {}
+  let unitId = uuidv4();
+  try {
+    unit.metadata = {};
+    unit.metadata.authority = unit.authority;
+    updates[`units/${unitId}`] = unit;
+    return firebase.database().ref().update(updates);
+  } catch (e) {
+    console.error(e);
+  }
 };
 
 // // Get and return all Users
@@ -471,23 +504,47 @@ exports.addUnit = (unit) => {
 ///////
 
 // Get and return all Pupils
-exports.updatePupil = (unitId, groupId, pupilId, pupil) => {
+exports.updatePupil = (unitId, oldGroupId, newGroupId, pupilId, pupil) => {
   var updates = {};
-  updates[`pupils/${pupilId}`] = pupil
+  //change group
+  if (oldGroupId !== newGroupId) {
+      updates[`groups/${oldGroupId}/metadata/pupils/${pupilId}`] = null;
+  }
+  pupil.metadata = {};
+  pupil.metadata.authority = units[unitId].authority;
+  pupil.metadata.unitId = unitId;
+  pupil.metadata.groupId = newGroupId;
+  pupil.metadata.pupilId = pupilId;
+  updates[`groups/${newGroupId}/metadata/pupils/${pupilId}`] = pupilId;
+  updates[`pupils/${pupilId}`] = pupil;
 
+  return firebase.database().ref().update(updates);
 };
 
 // Get and return all Groups
 exports.updateGroup = (unitId, groupId, group) => {
-  unitsRef.doc(unitId).collection('groups')
-    .doc(groupId)
-    .update(group)
+  var updates = {};
+
+  group.metadata = {};
+  group.metadata.authority = units[unitId].authority;
+  group.metadata.unitId = unitId;
+  group.metadata.groupId = groupId;
+  group.metadata.pupils = groups[groupId].metadata.pupils;
+  updates[`groups/${groupId}`] = pupilId;
+
+  return firebase.database().ref().update(updates);
 };
 
 // Get and return all Units
 exports.updateUnit = (unitId, unit) => {
-  unitsRef.doc(unitId)
-    .update(unit)
+  group.metadata = {};
+  group.metadata.authority = units[unitId].authority;
+  group.metadata.unitId = unitId;
+  group.metadata.groupId = groupId;
+  group.metadata.pupils = groups[groupId].metadata.pupils;
+  updates[`groups/${groupId}`] = pupilId;
+
+  return firebase.database().ref().update(updates);
 };
 
 // // Get and return all Users

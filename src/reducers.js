@@ -8,6 +8,7 @@ const INITIAL_STATE = {
   isAdmin: false,
   authorities: [],
   pupils: [],
+  pupilsLoaded: false,
   units: [],
   groups: [],
   userName: '',
@@ -45,7 +46,7 @@ const reducers = (state = INITIAL_STATE, action) => {
                                   });
     }
     break;
-    
+
     case 'UNITS_CHANGED': {
       state = _.assign({}, state, {
                                     units: action.data.units
@@ -62,7 +63,8 @@ const reducers = (state = INITIAL_STATE, action) => {
 
     case 'PUPILS_CHANGED': {
       state = _.assign({}, state, {
-                                    pupils: action.data.pupils
+                                    pupils: action.data.pupils,
+                                    pupilsLoaded: true
                                   });
     }
     break;

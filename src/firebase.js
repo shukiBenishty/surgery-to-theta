@@ -11,7 +11,7 @@ var config = {
    storageBucket: "thetapreprod.appspot.com",
    messagingSenderId: "774099448573"
  };
- 
+
 // var config = {
 //   apiKey: "AIzaSyAT9qGs8q0Mij_uG1TZS9Ml03BT1cesPqQ",
 //   authDomain: "thetadev-49eb5.firebaseapp.com",

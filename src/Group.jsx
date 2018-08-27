@@ -27,7 +27,8 @@ type State = {
 const mapStateToProps = (state) => {
   return {
     groups: state.groups,
-    isAdmin: state.isAdmin
+    isAdmin: state.isAdmin,
+    pupilsLoaded: state.pupilsLoaded
   }
 }
 
@@ -48,25 +49,45 @@ class Group extends React.Component<{}, State> {
     pupilId2Delete: ''
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
+  componentDidUpdate(prevProps, prevState, snapshot) {
 
-    if( nextProps.isAdmin !== this.props.isAdmin ||
-      nextProps.groups[this.props.match.params.groupid] !== this.props.groups[this.props.match.params.groupid]) {
-      ::this.loadData(nextProps.isAdmin);
+    if( prevProps.groups !== this.props.groups ||
+      prevProps.pupilsLoaded !== this.props.pupilsLoaded ) {
+      ::this.loadData(prevProps.isAdmin);
     }
-    if(nextState !== this.state){
-      return true;
-    } else {
-      return false;
-    }
+
+    //console.log(prevState);
+    //console.log(prevProps.groups );
   }
-  componentWillMount() {
+
+  // shouldComponentUpdate(nextProps, nextState) {
+  //
+  //   // if( nextProps.isAdmin !== this.props.isAdmin ||
+  //   //   nextProps.groups[this.props.match.params.groupid] !== this.props.groups[this.props.match.params.groupid]) {
+  //   if( nextProps.isAdmin !== this.props.isAdmin
+  //   || this.state.groupData) {
+  //     ::this.loadData(nextProps.isAdmin);
+  //   }
+  //
+  //   if( nextState !== this.state){
+  //     return true;
+  //   } else {
+  //     return false;
+  //   }
+  // }
+
+  componentDidMount() {
       ::this.loadData(this.props.isAdmin);
   }
-  async loadData(isAdmin) {
+
+  loadData(isAdmin) {
 
     const groupId = this.props.match.params.groupid;
     const unitId = this.props.match.params.unitid;
+
+    if( !this.props.pupilsLoaded ) {
+      return;
+    }
 
     try {
 
