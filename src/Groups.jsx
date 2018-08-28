@@ -145,7 +145,10 @@ class Groups extends React.Component<{}, State> {
      ],
     };
 
-    this.state.groups.forEach( (group, index) => {
+    console.log(this.reactTable.state.sortedData);
+
+    //this.state.groups.forEach( (group, index) => {
+    this.reactTable.state.sortedData.forEach( (group, index) => {
         const groupData = [];
         groupData.push(1 + index); // reserve 1 for caption row
         groupData.push(group.name);
@@ -403,6 +406,7 @@ class Groups extends React.Component<{}, State> {
                         <Row>
                           <Col md='12'>
                             <ReactTable
+                              ref={ (t) => this.reactTable = t }
                               filterable
                               PaginationComponent={Pagination}
                               getTheadThProps = { () => {

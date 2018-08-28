@@ -321,8 +321,6 @@ class Pupils extends React.Component<{}, State> {
     this.columns.forEach( col => {header.push(col.Header);});
     const _export = {data: [ header ] };
 
-    console.log(this.reactTable.state.sortedData);
-
     this.reactTable.state.sortedData.forEach( (pupil, index) => {
       const pupilData = [];
       pupilData.push(1 + index); // reserve 1 for caption row
