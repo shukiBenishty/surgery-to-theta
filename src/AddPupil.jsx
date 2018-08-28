@@ -229,7 +229,7 @@ class AddPupil extends React.Component<{}, State> {
           componentState: 'edit',
           disabledPupilId: true,
           componnentHeader: componnentHeader,
-          disabledAuthority: true,
+          disabledAuthority: false,
           disabledUnit: false,
           disabledGroup: false,
           selectedAuthority: unit.authority,
@@ -387,7 +387,6 @@ class AddPupil extends React.Component<{}, State> {
 
   authorityChanged = (authority) => {
 
-
     const _units = this.state.units.filter( unit => {
         return authority.name === unit.authority
     });
@@ -401,7 +400,6 @@ class AddPupil extends React.Component<{}, State> {
     // this.state.pupil.authority = authority.name;
       // disabledUnit: false,
     this.setState({
-
       filterdUnits: _units,
       filterdGroups: _groups,
       selectedAuthority: authority,
@@ -434,8 +432,8 @@ class AddPupil extends React.Component<{}, State> {
   }
 
   groupChanged = (group) => {
-    this.state.pupil.metadata.groupId = group.metadata.groupId;
-    this.state.pupil.groupName = group.groupName;
+    //this.state.pupil.metadata.groupId = group.metadata.groupId;
+    //this.state.pupil.groupName = group.groupName;
     this.setState({
       selectedGroup: group,
       pupil: this.state.pupil
