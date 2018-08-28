@@ -479,7 +479,7 @@ class AddPupil extends React.Component<{}, State> {
               </div>
               <CardBody>
                 <Card>
-{this.state.pupil && <CardBody>
+{ (this.state.pupil.pupilId || this.state.componentState == 'new' )&& <CardBody>
                       <Form onSubmit={::this.onFormSubmit}>
                         <Container>
                           <Card>

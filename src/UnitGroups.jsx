@@ -52,6 +52,7 @@ class UnitGroups extends React.Component<Props, State> {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
+
     if( nextProps.groups !== this.props.groups) {
       ::this._loadcData()
     }
@@ -67,16 +68,20 @@ class UnitGroups extends React.Component<Props, State> {
     if( this.unregisterCollectionObserver ) {
       this.unregisterCollectionObserver();
     }
+
   }
+
   componentDidMount() {
-    ::this._loadcData(this.props.unitId)
-}
+    ::this._loadcData(this.props.unitId);
+  }
 
 
   _loadcData() {
     const isAdmin = this.props.isAdmin;
     let _groups = database.getAllGroupsInUnit(this.props.unitId);
-    ::this.groupsFromDocs(_groups, isAdmin);
+    if (_groups) {
+      ::this.groupsFromDocs(_groups, isAdmin);
+    }
   }
 
   groupsFromDocs(docs, isAdmin: Boolean) {
@@ -84,7 +89,9 @@ class UnitGroups extends React.Component<Props, State> {
     let _groups: Group[] = [];
 
     docs.forEach( (group, index) => {
-        let registeredPupils = ( group.registeredPupils ) ? group.registeredPupils : 0;
+
+        console.log(index);
+        let registeredPupils = ( group.registeredPupils || 0 );
 
         _groups.push({
           ...group,
@@ -192,20 +199,40 @@ class UnitGroups extends React.Component<Props, State> {
     this.props.history.push(`/dashboard/addgroup/${this.props.unitId}/${groupId}`);
   }
 
-  toggleModal(groupId: String) {
+  toggleModal(unitId: String, groupId: String, group) {
     this.setState({
       modal: !this.state.modal,
-      groupId2Delete: groupId
+      group2Delete: group,
+      groupId2Delete: groupId,
+      unitId2Delete: unitId,
     });
   }
 
-  async deleteGroup() {
+  deleteGroup() {
     //console.log(`UnitId: ${this.props.docId}. GroupId: ${this.state.groupId2Delete}`);
     this.setState({
       modal: !this.state.modal
     });
 
-    database.deleteGroupById(this.props.unitId, this.state.groupId2Delete);
+    const data2post = {
+      "groupSymbol": this.state.group2Delete.symbol,
+      "description": '',
+      "status": "4",
+      "price": this.state.group2Delete.price,
+      "paymentInstallments": this.state.group2Delete.paymentInstallments
+    };
+
+    fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
+      // headers: {
+      //     "Content-Type": "application/json",
+      // },
+      mode: 'no-cors', // no-cors prevents reading the response
+      method: 'POST',
+      body: JSON.stringify(data2post)
+    }).then(() => {
+        database.deleteGroupById(this.props.unitId, this.state.groupId2Delete);
+    });
+
 
   }
 
@@ -353,7 +380,7 @@ class UnitGroups extends React.Component<Props, State> {
                                 style={{
                                   'padding': '0'
                                 }}
-                              onClick={ () => ::this.toggleModal(groupId) } >
+                              onClick={ () => ::this.toggleModal(this.props.unitId, groupId, row.original) } >
                         <i className='fa fa-times'></i>
                       </Button>
                      </Col>

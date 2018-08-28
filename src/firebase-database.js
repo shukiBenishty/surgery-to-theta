@@ -208,7 +208,7 @@ exports.initDatabase =  (uid, role) => {
 
     Promise.all(promises).then(()=>{
       setTimeout( () => {
-            checkDB();
+            //checkDB();
       }, 1000 * 20);
 
     });
@@ -269,7 +269,7 @@ exports.initDatabase =  (uid, role) => {
 //                     groups[groupId].registeredPupils = ( groupData.registeredPupils ) ? groupData.registeredPupils : 0
 //                     groups[groupId].metadata = groupMetadata;
 //                     if (group.type === "added") {
-//                       units[unitId].metadata.groups[groupId] = { groupId };
+//                       units[unitId].metadata.groups[groupId] =  groupId ;
 //                        unitsRef.doc(unitId)
 //                         .collection('groups')
 //                         .doc(groupId).collection('pupils')
@@ -358,22 +358,33 @@ exports.getAllAuthorities = () => { return Object.values(authorities); };
 
 // Get and return all Pupils
 exports.getAllPupilsInGroup = (groupId) => {
-    return Object.values(groups[groupId].metadata.pupils).map(( pupilId )=> {
-      return pupils[pupilId];
+  let _pupils = [];
+  Object.values(groups[groupId].metadata.pupils).forEach(( pupilId )=> {
+      if (pupils[pupilId]) {
+         _pupils.push(pupils[pupilId]);
+      }
     })
+  return _pupils;
 };
 
 // Get and return all Groups
 exports.getAllGroupsInUnit = (unitId) => {
-  return Object.values(units[unitId].metadata.groups).map(( group )=> {
-    return groups[group.groupId];
+  let _groups = [];
+  Object.values(units[unitId].metadata.groups).forEach(( groupId )=> {
+    if (groups[groupId]) {
+       _groups.push(groups[groupId]);
+    }
   })
+  return _groups;
 };
 
 // Get and return all Units
 exports.getAllUnitsInAuthority = (authorityId) => {
-  return Object.values(authorities[authorityId].metadata.units).map(( unitId )=> {
-    return units[unitId];
+let _units = [];
+ Object.values(authorities[authorityId].metadata.units).forEach(( unitId )=> {
+    if (units[unitId]) {
+       _units.push(units[unitId]);
+    }
   })
 };
 
@@ -477,8 +488,10 @@ exports.addGroup = (unitId, group) => {
     group.metadata.authority = unit.authority;
     group.metadata.unitId = unitId;
     group.metadata.groupId = groupId;
+    group.registeredPupils = 0;
     updates[`groups/${groupId}`] = group;
     updates[`units/${unitId}/metadata/groups/${groupId}`] = groupId
+
     return firebase.database().ref().update(updates);
   } catch (e) {
     console.error(e);

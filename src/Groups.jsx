@@ -14,7 +14,7 @@ import { Container, Button,
   Tooltip,
   Modal, ModalHeader, ModalBody, ModalFooter
 } from 'reactstrap';
-
+import database from './firebase-database.js'
 
 type Group = {
     id: String,
@@ -76,25 +76,10 @@ class Groups extends React.Component<{}, State> {
     try {
       let _groups = groups.map(( group) => {
 
-          // const openTill = group.openTill ?
-          //                 moment.unix(group.openedTill.seconds).format('DD/MM/YYYY') :
-          //
-
-          // return {
-          //   id: group.groupId,
-          //   unitId: group.unitId,
-          //   name: group.name,
-          //   symbol: group.symbol,
-          //   openTill: group.openTill,
-          //   openFrom: group.openFrom,
-          //   unitName: group.unitName,
-          //   authority: group.authority,
-          //   price: group.price,
-          //   capacity: group.capacity,
-          //   isAdmin: this.props.isAdmin
-          // };
-          let _unit = units[group.metadata.unitId];
+          let _unit = database.getUnitById(group.metadata.unitId);
           let _authority = (_unit) ? _unit.authority : undefined;
+          let _unitName = (_unit) ? _unit.unitName : undefined;
+
           return {
             id: group.metadata.groupId,
             unitId: group.metadata.unitId,
@@ -102,7 +87,7 @@ class Groups extends React.Component<{}, State> {
             symbol: group.symbol,
             openTill: group.openTill,
             openFrom: group.openFrom,
-            unitName: group.unitName,
+            unitName: _unitName,
             authority: _authority,
             price: group.price,
             capacity: group.capacity,
@@ -131,7 +116,7 @@ class Groups extends React.Component<{}, State> {
     if( nextProps.isAdmin !== this.props.isAdmin ||
         nextProps.groups !== this.props.groups ||
         nextProps.units !== this.props.units) {
-        ::this.loadGroups(nextProps.groups, this.props.units);
+        ::this.loadGroups(nextProps.groups, nextProps.units);
     }
     if (nextProps.authorities !== this.props.authorities){
       ::this.loadAuthorities(nextProps.authorities);
@@ -241,17 +226,39 @@ class Groups extends React.Component<{}, State> {
     this.props.history.push(`/dashboard/addgroup/${unitId}/${groupId}`);
   }
 
-  toggleModal(groupId: String) {
+  toggleModal(unitId: String, groupId: String, group) {
     this.setState({
       modal: !this.state.modal,
-      groupId2Delete: groupId
+      group2Delete: group,
+      groupId2Delete: groupId,
+      unitId2Delete: unitId,
     });
+
   }
 
   deleteGroup() {
     //console.log(`UnitId: ${this.props.docId}. GroupId: ${this.state.groupId2Delete}`);
     this.setState({
       modal: !this.state.modal
+    });
+
+    const data2post = {
+      "groupSymbol": this.state.group2Delete.symbol,
+      "description": '',
+      "status": "4",
+      "price": this.state.group2Delete.price,
+      "paymentInstallments": this.state.group2Delete.paymentInstallments
+    };
+
+    fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
+      // headers: {
+      //     "Content-Type": "application/json",
+      // },
+      mode: 'no-cors', // no-cors prevents reading the response
+      method: 'POST',
+      body: JSON.stringify(data2post)
+    }).then(() => {
+      database.deleteGroupById(this.state.unitId2Delete, this.state.groupId2Delete);
     });
   }
 
@@ -328,7 +335,7 @@ class Groups extends React.Component<{}, State> {
                     style={{
                       'padding': '0'
                     }}
-                    onClick={ () => ::this.toggleModal(groupId) } >>
+                    onClick={ () => ::this.toggleModal(unitId, groupId, row.original) } >>
               <i className='fa fa-times'></i>
             </Button>
           </Col>

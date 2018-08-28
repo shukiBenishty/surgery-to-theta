@@ -65,8 +65,8 @@ class AddGroup extends React.Component<{}, State> {
       let _unit = database.getUnitById(unitId);
 
       //// way we need this ??????
-      _unit.cluster = ( docData.cluster || 3 );
-      _unit.region = ( docData.region || 'מרכז');
+      _unit.cluster = ( _unit.cluster || 3 );
+      _unit.region = ( _unit.region || 'מרכז');
 
       this.setState({
         unit: _unit

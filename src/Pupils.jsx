@@ -316,19 +316,22 @@ class Pupils extends React.Component<{}, State> {
     }];
 
   exportExcel() {
+
     const header = [''];
     this.columns.forEach( col => {header.push(col.Header);});
     const _export = {data: [ header ] };
 
-    this.state.pupils.forEach( (pupil, index) => {
-        const pupilData = [];
-        pupilData.push(1 + index); // reserve 1 for caption row
-        this.columns.forEach(col =>{
-            pupilData.push(pupil[col.accessor]);
-        })
+    console.log(this.reactTable.state.sortedData);
 
-        _export.data.push(pupilData);
-    });
+    this.reactTable.state.sortedData.forEach( (pupil, index) => {
+      const pupilData = [];
+      pupilData.push(1 + index); // reserve 1 for caption row
+      this.columns.forEach(col =>{
+          pupilData.push(pupil[col.accessor]);
+      })
+
+      _export.data.push(pupilData);
+    })
 
     /* create a new blank workbook */
     var workbook = XLSX.utils.book_new();
@@ -501,6 +504,7 @@ class Pupils extends React.Component<{}, State> {
                               </ModalFooter>
                             </Modal>
                             <ReactTable
+                              ref={ (t) => this.reactTable = t }
                               filterable
                               PaginationComponent={Pagination}
                               getTheadThProps = { () => {
