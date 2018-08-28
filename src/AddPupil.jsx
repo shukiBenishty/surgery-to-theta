@@ -341,11 +341,11 @@ class AddPupil extends React.Component<{}, State> {
 
             if(this.props.match.params.pupilid != 0) {
 
-                database.updatePupil(this.props.match.params.unitid,
-                                      this.props.match.params.groupid,
-                                      groupId,
-                                      this.props.match.params.pupilid,
-                                      pupil);
+                database.updatePupil(unitId,
+                                     this.props.match.params.groupid,
+                                     groupId,
+                                     this.props.match.params.pupilid,
+                                     pupil);
             } else {
                 // Add new pupil to Firestore
                 database.addPupil(unitId, groupId, pupil);
