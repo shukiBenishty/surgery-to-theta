@@ -98,8 +98,8 @@ class Pupils extends React.Component<{}, State> {
 
  loadPupils(isAdmin: Boolean, props) {
     let _pupils = props.pupils.map((pupil) => {
-    // pupil.birthDay = pupil.birthDay ? moment.unix(pupil.birthDay.seconds).format('DD/MM/YYYY') : '';
-    let groupSymbol = (this.state.groups && this.state.groups[pupil.metadata.groupId]) ? this.state.groups[pupil.metadata.groupId].groupSymbol : ''
+    let _group = database.getGroupById(pupil.metadata.groupId);
+    let groupSymbol = (_group) ?_group.symbol : ''
       return{
         ...pupil,
         groupSymbol:groupSymbol  ,

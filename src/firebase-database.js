@@ -446,7 +446,8 @@ exports.deleteUnitById = (unitId) => {
 
 // Get and return all Pupils
 exports.addPupil = (unitId, groupId, pupil) => {
-  let updates = {}
+  trimObjectProperties(pupil);
+  let updates = {};
   let unit = units[unitId];
   let pupilId = uuidv4();
   try {
@@ -466,6 +467,7 @@ exports.addPupil = (unitId, groupId, pupil) => {
 
 // Get and return all Groups
 exports.addGroup = (unitId, group) => {
+  trimObjectProperties(group);
   let updates = {}
   let unit = units[unitId];
   let groupId = uuidv4();
@@ -484,6 +486,7 @@ exports.addGroup = (unitId, group) => {
 
 // Get and return all Units
 exports.addUnit = (unit) => {
+  trimObjectProperties(unit);
   let updates = {}
   let unitId = uuidv4();
   try {
@@ -505,6 +508,7 @@ exports.addUnit = (unit) => {
 
 // Get and return all Pupils
 exports.updatePupil = (unitId, oldGroupId, newGroupId, pupilId, pupil) => {
+  trimObjectProperties(pupil);
   var updates = {};
   //change group
   if (oldGroupId !== newGroupId) {
@@ -525,6 +529,7 @@ exports.updatePupil = (unitId, oldGroupId, newGroupId, pupilId, pupil) => {
 
 // Get and return all Groups
 exports.updateGroup = (unitId, groupId, group) => {
+  trimObjectProperties(group);
   var updates = {};
 
   group.metadata = {};
@@ -532,19 +537,19 @@ exports.updateGroup = (unitId, groupId, group) => {
   group.metadata.unitId = unitId;
   group.metadata.groupId = groupId;
   group.metadata.pupils = groups[groupId].metadata.pupils;
-  updates[`groups/${groupId}`] = pupilId;
+  updates[`groups/${groupId}`] = group;
 
   return firebase.database().ref().update(updates);
 };
 
 // Get and return all Units
 exports.updateUnit = (unitId, unit) => {
-  group.metadata = {};
-  group.metadata.authority = units[unitId].authority;
-  group.metadata.unitId = unitId;
-  group.metadata.groupId = groupId;
-  group.metadata.pupils = groups[groupId].metadata.pupils;
-  updates[`groups/${groupId}`] = pupilId;
+  trimObjectProperties(unit);
+  unit.metadata = {};
+  unit.metadata.authority = units[unitId].authority;
+  unit.metadata.unitId = unitId;
+  unit.metadata.groups = units[unitId].groups;
+  updates[`units/${unitId}`] = unit;
 
   return firebase.database().ref().update(updates);
 };
