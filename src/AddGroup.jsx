@@ -272,14 +272,14 @@ class AddGroup extends React.Component<{}, State> {
         "paymentInstallments": group.paymentInstallments
       };
 
-      // await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
-      //   // headers: {
-      //   //     "Content-Type": "application/json",
-      //   // },
-      //   mode: 'no-cors', // no-cors prevents reading the response
-      //   method: 'POST',
-      //   body: JSON.stringify(data2post)
-      // });
+      await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
+        // headers: {
+        //     "Content-Type": "application/json",
+        // },
+        mode: 'no-cors', // no-cors prevents reading the response
+        method: 'POST',
+        body: JSON.stringify(data2post)
+      });
 
       // Add new or update group to/in Firestore
       if( this.props.match.params.groupid === '0' ) {

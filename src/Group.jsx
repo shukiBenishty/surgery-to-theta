@@ -122,7 +122,7 @@ class Group extends React.Component<{}, State> {
   pupilsFromDocs(pupils, isAdmin: Boolean) {
 
     const _pupils = pupils.map( (pupil) => {
-      return new PupilData(pupil.id,
+      return new PupilData(pupil.metadata.pupilId,
                               `${pupil.name} ${pupil.lastName}`,
                               pupil.lastName,
                               pupil.pupilId,

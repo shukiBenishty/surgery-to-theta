@@ -162,14 +162,14 @@ class UnitGroups extends React.Component<Props, State> {
         "price": groupData.price
       };
 
-      // await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
-      //   // headers: {
-      //   //     "Content-Type": "application/json",
-      //   // },
-      //   mode: 'no-cors',
-      //   method: 'POST',
-      //   body: JSON.stringify(data2post)
-      // })
+      await fetch('https://rishumon.com/api/elamayn/edit_class.php?secret=Day1%21', {
+        // headers: {
+        //     "Content-Type": "application/json",
+        // },
+        mode: 'no-cors',
+        method: 'POST',
+        body: JSON.stringify(data2post)
+      })
 
       database.updateGroup(this.props.unitId, groupData.id, {
                                           isClosed: groupData.isClosed
