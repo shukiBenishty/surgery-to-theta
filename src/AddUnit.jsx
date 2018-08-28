@@ -140,8 +140,7 @@ class AddUnit extends React.Component<{}, State> {
       // Add new unit to Firestore
       database.addUnit(unit);
 
-
-      this.props.history.push(`/dashboard/units`);
+      this.props.history.goBack();
 
     } catch( err ) {
       console.error(err);

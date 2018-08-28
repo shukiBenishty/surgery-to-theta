@@ -97,27 +97,30 @@ class Pupils extends React.Component<{}, State> {
   }
 
  loadPupils(isAdmin: Boolean, props) {
-    let _pupils = props.pupils.map((pupil) => {
-    let _group = database.getGroupById(pupil.metadata.groupId);
-    let groupSymbol = (_group) ?_group.symbol : ''
-      return{
-        ...pupil,
-        groupSymbol:groupSymbol  ,
-        isAdmin: isAdmin
-      };
-    })
 
-      this.setState({
-          units: this.props.units,
-          selectedUnits: this.props.units,
-          _units: this.props.units,
-          pupils: _pupils,
-          displayedPupils:_pupils ,
-          loading: false
-      })
+    let _pupils = props.pupils.map((pupil) => {
+
+      let _group = database.getGroupById(pupil.metadata.groupId);
+      let groupSymbol = (_group) ?_group.symbol : ''
+        return{
+          ...pupil,
+          groupSymbol:groupSymbol  ,
+          isAdmin: isAdmin
+        };
+    });
+
+    this.setState({
+        units: this.props.units,
+        selectedUnits: this.props.units,
+        _units: props.units,
+        pupils: _pupils,
+        displayedPupils:_pupils ,
+        loading: false
+    });
 }
 
   componentDidMount(){
+
     this.loadPupils(this.props.isAdmin, this.props);
     this.loadAuthorities(this.props);
     this.setState({

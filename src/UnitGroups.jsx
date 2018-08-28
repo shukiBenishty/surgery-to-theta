@@ -178,9 +178,7 @@ class UnitGroups extends React.Component<Props, State> {
         body: JSON.stringify(data2post)
       })
 
-      database.updateGroup(this.props.unitId, groupData.id, {
-                                          isClosed: groupData.isClosed
-                                        });
+      database.updateGroup(this.props.unitId, groupData.id, groupData);
 
     } catch( err ) {
       console.error(err);
@@ -232,7 +230,6 @@ class UnitGroups extends React.Component<Props, State> {
     }).then(() => {
         database.deleteGroupById(this.props.unitId, this.state.groupId2Delete);
     });
-
 
   }
 

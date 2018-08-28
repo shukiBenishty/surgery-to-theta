@@ -64,13 +64,14 @@ class AddGroup extends React.Component<{}, State> {
     try {
       let _unit = database.getUnitById(unitId);
 
-      //// way we need this ??????
-      _unit.cluster = ( _unit.cluster || 3 );
-      _unit.region = ( _unit.region || 'מרכז');
+      if( _unit ) {
+        _unit.cluster = ( _unit.cluster || 3 );
+        _unit.region = ( _unit.region || 'מרכז');
 
-      this.setState({
-        unit: _unit
-      })
+        this.setState({
+          unit: _unit
+        });
+      }
     }
     catch( err ) {
         console.error(err);
@@ -109,7 +110,7 @@ class AddGroup extends React.Component<{}, State> {
       _groupData.openFrom = moment(_date);
 
       this.setState({
-        fromDate: moment(_date)
+        groupData: _groupData
       });
     }
   }
@@ -221,8 +222,8 @@ class AddGroup extends React.Component<{}, State> {
       name: event.target.groupName.value,
       symbol: event.target.symbol.value,
       capacity: event.target.groupCapacity.value,
-      openFrom: this.state.groupData.openFrom.toDate(),
-      openTill: this.state.groupData.openTill.toDate(),
+      openFrom: this.state.groupData.openFrom.format('DD/MM/YYYY'),
+      openTill: this.state.groupData.openTill.format('DD/MM/YYYY'),
       price: event.target.price.value,
       sec_role: `group_${event.target.symbol.value}`,
       registeredPupils: 0,
@@ -288,9 +289,7 @@ class AddGroup extends React.Component<{}, State> {
         database.updateGroup(unitId, this.props.match.params.groupid, group);
       }
 
-
-
-      setTimeout( () => this.props.history.push(`/dashboard/units`),
+      setTimeout( () => this.props.history.goBack(),
                  1500);
 
     } catch( err ) {

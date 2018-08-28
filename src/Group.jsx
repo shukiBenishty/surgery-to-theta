@@ -40,8 +40,8 @@ class Group extends React.Component<{}, State> {
     groupData: {
       name: '',
       symbol: '',
-      openFrom: '____/__/__',
-      openTill: '____/__/__'
+      openFrom: moment(),
+      openTill: moment()
     },
     dataStatus: 'טעינת נתונים..',
     tooltipOpen: false,
@@ -156,7 +156,9 @@ class Group extends React.Component<{}, State> {
      ],
     };
 
-    this.state.pupils.forEach( (pupil, index) => {
+    //this.state.pupils.forEach( (pupil, index) => {
+    this.reactTable.state.sortedData.forEach( (pupil, index) => {
+
       const pupilData = [];
       pupilData.push(1 + index); // reserve 1 for caption row
       pupilData.push(pupil.name);
@@ -287,7 +289,7 @@ class Group extends React.Component<{}, State> {
                 <div className='card-header'>
                   <h5 className='title' dir='rtl'>רישום תלמידים לכיתה {this.state.groupData.name} (מזהה {this.state.groupData.symbol}) </h5>
                   <h5 className='title'>קיבולת: {this.state.groupData.capacity} ילדים</h5>
-                  <h5 className='title'>תאריכי פעילות: מ {this.state.groupData.openFrom} עד {this.state.groupData.openTill}</h5>
+                  <h5 className='title'>תאריכי פעילות: מ {this.state.groupData.openFrom.format('DD/MM/YYYY')} עד {this.state.groupData.openTill.format('DD/MM/YYYY')}</h5>
                 </div>
                 <CardBody>
                   <Row className='align-items-center'>
@@ -334,6 +336,7 @@ class Group extends React.Component<{}, State> {
                       </Modal>
 
                       <ReactTable
+                        ref={ (t) => this.reactTable = t }
                         className="-striped -highlight tableInCard"
                         data={this.state.pupils}
                         noDataText={this.state.dataStatus}
