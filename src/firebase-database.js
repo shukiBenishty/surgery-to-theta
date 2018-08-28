@@ -120,7 +120,7 @@ const initUsers = () => {
 //           _pupil.metadata.unitId = _group.metadata.unitId;
 //           _pupil.metadata.authority = _group.metadata.authority;
 //           updates[`pupils/${pupilId}`] = _pupil;
-//           updates[`groups/${_group.metadata.groupId}/metadata/pupils/${pupilId}`] = pupilId;
+//           updates[`groups/${_group.metadata.groupId}/metadata/pupils/${pupilId}`] = pupilId; // { pupilId }
 //         }
 
 //       }
@@ -509,6 +509,8 @@ exports.updatePupil = (unitId, oldGroupId, newGroupId, pupilId, pupil) => {
   //change group
   if (oldGroupId !== newGroupId) {
       updates[`groups/${oldGroupId}/metadata/pupils/${pupilId}`] = null;
+      updates[`groups/${oldGroupId}/registeredPupils`] = groups[groupId].registeredPupils - 1;
+      updates[`groups/${newGroupId}/registeredPupils`] = groups[groupId].registeredPupils + 1;
   }
   pupil.metadata = {};
   pupil.metadata.authority = units[unitId].authority;

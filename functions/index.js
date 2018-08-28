@@ -1,6 +1,7 @@
 const functions = require('./init.js').functions;
 const firestore = require('./init.js').firestore;
 const realTimeDB = require('./init.js').realTimeDB;
+const uuidv4 = require('uuid/v4');
 
 const moment = require('moment');
 const Validator = require('jsonschema').Validator;
@@ -97,7 +98,7 @@ app.post('/pupil', (req, res) => {
   //console.log('Birthday: ' + birthDay);
   const when = moment(req.body.whenRegistered, "YYYY-MM-DD HH:mm:ss").format('DD/MM/YYYY HH:mm:ss');
   //console.log('When: ' + when);
-  const pupil = {
+  let pupil = {
     name: req.body.name,
     lastName: req.body.family,
     pupilId: ( req.body.pupilId ) ? req.body.pupilId : '',
@@ -130,20 +131,42 @@ app.post('/pupil', (req, res) => {
                 whenRegistered:${pupil.whenRegistered}
               }`);
 
-
+  let updates = {};
+  let pupilId = uuidv4();
   return realTimeDB.ref('groups').orderByChild(`/symbol`)
         .equalTo(groupSymbol.toString()).once('value')
         .then((snapshot) => {
-            console.log(snapshot.val());
-            console.log("good");
-            return res.status(200).json({
-              id: "ref.id"
-            })
+            if (snapshot.val()) {
+                let _groups = snapshot.val();
+                for(key in _groups){
+                  let _group = _groups[key];
+                  console.log(_group);
+
+                  pupil.metadata = {};
+                  pupil.metadata.authority = _group.metadata.authority;
+                  pupil.metadata.unitId = _group.metadata.unitId;
+                  pupil.metadata.groupId = key;
+                  pupil.metadata.pupilId = pupilId;
+                  updates[`pupils/${pupilId}`] = pupil;
+                  updates[`groups/${key}/metadata/pupils/${pupilId}`] = pupil;
+                  updates[`groups/${key}/registeredPupils`] = _group.registeredPupils + 1;
+                  console.log(pupil);
+                }
+                return realTimeDB.ref().update(updates).then(() => {
+                  return res.status(200).json({
+                    id: pupilId
+                  })
+                });
+            } else{
+              return res.status(200)
+                    .json({
+                        errorCode: 2,
+                        errorMessage: `No group identified by symbol '${req.body.groupSymbol}' was found`
+                      });
+          }
         })
         .catch((err) =>{
             console.error(err);
-            console.error(`No group identified by symbol '${req.body.groupSymbol}' was found`);
-            console.error(`Error catched ${err.message}`);
             return res.status(200)
                   .json({
                       errorCode: 2,
