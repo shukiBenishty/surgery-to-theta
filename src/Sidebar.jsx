@@ -56,7 +56,7 @@ class Sidebar extends React.Component<{}, State> {
                       </div>
                 </a>
                 <a href='#' style={this.styles.logoTitle} className="simple-text logo-normal">
-                   צהרוני נצנים
+                  אל המעיין
                  </a>
               </div>
               <div className="sidebar-wrapper" ref="sidebar">

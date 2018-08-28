@@ -207,9 +207,9 @@ exports.initDatabase =  (uid, role) => {
     }));
 
     Promise.all(promises).then(()=>{
-      setTimeout( () => {
-            //checkDB();
-      }, 1000 * 20);
+      // setTimeout( () => {
+      //       //checkDB();
+      // }, 1000 * 20);
 
     });
   } catch( err ) {
@@ -352,18 +352,19 @@ exports.getAllUsers = () => { return Object.values(users); };
 // Get and return all Authorities
 exports.getAllAuthorities = () => { return Object.values(authorities); };
 
-
-
-///////////// get by fathers //////////////
-
 // Get and return all Pupils
 exports.getAllPupilsInGroup = (groupId) => {
   let _pupils = [];
-  Object.values(groups[groupId].metadata.pupils).forEach(( pupilId )=> {
+
+ if( groups[groupId].metadata.pupils ) {
+
+    Object.values(groups[groupId].metadata.pupils).forEach(( pupilId )=> {
       if (pupils[pupilId]) {
          _pupils.push(pupils[pupilId]);
       }
-    })
+    });
+ }
+
   return _pupils;
 };
 
@@ -468,6 +469,7 @@ exports.addPupil = (unitId, groupId, pupil) => {
     pupil.metadata.unitId = unitId;
     pupil.metadata.groupId = groupId;
     pupil.metadata.pupilId = pupilId;
+    pupil.whenRegistered = moment().format('YYYY-MM-DD HH:mm:ss');
     updates[`pupils/${pupilId}`] = pupil;
     updates[`groups/${groupId}/metadata/pupils/${pupilId}`] = pupilId;
     updates[`groups/${groupId}/registeredPupils`] = groups[groupId].registeredPupils + 1;
@@ -527,8 +529,8 @@ exports.updatePupil = (unitId, oldGroupId, newGroupId, pupilId, pupil) => {
   //change group
   if (oldGroupId !== newGroupId) {
       updates[`groups/${oldGroupId}/metadata/pupils/${pupilId}`] = null;
-      updates[`groups/${oldGroupId}/registeredPupils`] = groups[groupId].registeredPupils - 1;
-      updates[`groups/${newGroupId}/registeredPupils`] = groups[groupId].registeredPupils + 1;
+      updates[`groups/${oldGroupId}/registeredPupils`] = groups[oldGroupId].registeredPupils - 1;
+      updates[`groups/${newGroupId}/registeredPupils`] = groups[newGroupId].registeredPupils + 1;
   }
   pupil.metadata = {};
   pupil.metadata.authority = units[unitId].authority;
@@ -550,7 +552,10 @@ exports.updateGroup = (unitId, groupId, group) => {
   group.metadata.authority = units[unitId].authority;
   group.metadata.unitId = unitId;
   group.metadata.groupId = groupId;
-  group.metadata.pupils = groups[groupId].metadata.pupils;
+  let _pupils = groups[groupId].metadata.pupils;
+  if (_pupils) {
+    group.metadata.pupils = groups[groupId].metadata.pupils;
+  }
   updates[`groups/${groupId}`] = group;
 
   return firebase.database().ref().update(updates);

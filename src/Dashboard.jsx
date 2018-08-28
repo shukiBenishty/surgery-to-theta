@@ -63,17 +63,18 @@ class Dashboard extends React.Component<Props, State> {
 
     firebase.auth().onAuthStateChanged( (user) => {
       if( user ) {
-
+        const email = user.email;
 
         this.props.dispatch({
           type: 'LOGIN',
           data: {
             userName: user.displayName,
-            userPictureUrl: user.photoURL
+            userPictureUrl: user.photoURL,
+            email: email
           }
         });
 
-        const email = user.email;
+
 
         // get user's role
         firebase.firestore().collection('users')

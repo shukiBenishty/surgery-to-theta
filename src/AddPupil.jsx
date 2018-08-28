@@ -111,6 +111,7 @@ type State = {
 
 const mapStateToProps = (state) => {
   return {
+    email: state.email,
     groups: state.groups,
     units: state.units,
     authorities: state.authorities,
@@ -263,7 +264,7 @@ class AddPupil extends React.Component<{}, State> {
   birthDayChanged(_date: Date) {
 
     if( moment(_date).isValid() ) {
-      this.state.pupil.birthDay = moment(_date);
+      this.state.pupil.birthDay = moment(_date).format('DD/MM/YYYY');
       this.setState({
         pupil: this.state.pupil
       });
@@ -290,6 +291,7 @@ class AddPupil extends React.Component<{}, State> {
       paymentApprovalNumber: (event.target.paymentApprovalNumber.value) ? event.target.paymentApprovalNumber.value: undefined ,
       receiveNumber: (event.target.paymentTypeCash.checked) ? event.target.receiveNumber.value : undefined ,
       waitingList: (event.target.waitingList.checked)? true : false,
+      editor: this.props.email
     }
 
     Object.keys(pupil).forEach(key => {
@@ -320,7 +322,7 @@ class AddPupil extends React.Component<{}, State> {
           return;
         }
 
-        pupil.birthDay = moment(pupil.birthDay).toDate();
+        // pupil.birthDay = moment(pupil.birthDay).toDate();
 
       try {
         _state.formInalid = false;
@@ -364,13 +366,8 @@ class AddPupil extends React.Component<{}, State> {
                   });
 
                 setTimeout( () => {
-                    if (this.props.match.params.groupid != 0) {
-                      this.props.history.push(`/dashboard/pupils`);
-                    } else {
-                      this.props.history.push(`/dashboard/pupils`);
-                    }
+                    this.props.history.goBack();
                   }, 1500);
-
 
             } catch( err ) {
               console.error(err);
@@ -680,6 +677,7 @@ class AddPupil extends React.Component<{}, State> {
                                     placeholder="מס' קבלה"
                                     defaultValue={this.state.pupil.receiveNumber}
                                     className={validationErrorClassNames}
+                                    invalidMessage={ this.state.paymentTypeCash ?  "שדה חובה" : '' }
                                     disabled={!this.state.paymentTypeCash}/>
                                 </Col>
                               </Row>
