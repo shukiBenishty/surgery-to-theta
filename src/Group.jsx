@@ -156,7 +156,9 @@ class Group extends React.Component<{}, State> {
      ],
     };
 
-    this.state.pupils.forEach( (pupil, index) => {
+    //this.state.pupils.forEach( (pupil, index) => {
+    this.reactTable.state.sortedData.forEach( (pupil, index) => {
+    
       const pupilData = [];
       pupilData.push(1 + index); // reserve 1 for caption row
       pupilData.push(pupil.name);
@@ -334,6 +336,7 @@ class Group extends React.Component<{}, State> {
                       </Modal>
 
                       <ReactTable
+                        ref={ (t) => this.reactTable = t }
                         className="-striped -highlight tableInCard"
                         data={this.state.pupils}
                         noDataText={this.state.dataStatus}
