@@ -343,11 +343,19 @@ class AddPupil extends React.Component<{}, State> {
 
             if(this.props.match.params.pupilid != 0) {
 
+<<<<<<< HEAD
                 database.updatePupil(unitId,
                                      this.props.match.params.groupid,
                                      groupId,
                                      this.props.match.params.pupilid,
                                      pupil);
+=======
+                database.updatePupil(this.props.match.params.unitid,
+                                      this.props.match.params.groupid,
+                                      groupId,
+                                      this.props.match.params.pupilid,
+                                      pupil);
+>>>>>>> pr/2
             } else {
                 // Add new pupil to Firestore
                 database.addPupil(unitId, groupId, pupil);
@@ -677,7 +685,10 @@ class AddPupil extends React.Component<{}, State> {
                                     placeholder="מס' קבלה"
                                     defaultValue={this.state.pupil.receiveNumber}
                                     className={validationErrorClassNames}
+<<<<<<< HEAD
                                     invalidMessage={ this.state.paymentTypeCash ?  "שדה חובה" : '' }
+=======
+>>>>>>> pr/2
                                     disabled={!this.state.paymentTypeCash}/>
                                 </Col>
                               </Row>

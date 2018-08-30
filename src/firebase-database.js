@@ -3,7 +3,11 @@ import {store} from './index.jsx';
 import moment from 'moment';
 const uuidv4 = require('uuid/v4');
 
+<<<<<<< HEAD
 // var serviceAccount = require("./pupilsM.json");
+=======
+var serviceAccount = require("./pupilsM.json");
+>>>>>>> pr/2
 
 const unitsRef = firebase.firestore().collection('units');
 const authoritiesRef = firebase.firestore().collection('authorities');
@@ -76,6 +80,7 @@ const initUsers = () => {
   })
 }
 
+<<<<<<< HEAD
 const checkDB = () => {
   var updates = {};
   let count = 0 ;
@@ -134,6 +139,66 @@ const checkDB = () => {
   firebase.database().ref().update(updates);
   // console.log(updates);
 };
+=======
+// const checkDB = () => {
+//   var updates = {};
+//   let count = 0 ;
+//   let countError1 = 0 ;
+//   let countError2 = 0 ;
+//   serviceAccount.forEach(function(pupil) {
+//     try {
+//       if(pupil.sent_successfully === "ok"){
+//         if(pupil.groupSymbol === 416545){
+//           countError1++;
+//           pupil.groupSymbol = 4165451;
+//         }
+//         if(pupil.groupSymbol === 713396){
+//           countError2++;
+//           pupil.groupSymbol = 713369;
+//         }
+//         let _pupil = {
+//           address: "",
+//           pupilId: pupil.pupilId,
+//           birthDay: moment(pupil.DateOfBirth, "YYYY-MM-DD HH:mm:ss").format('DD/MM/YYYY'), ////
+//           name: pupil.name,
+//           lastName: pupil.family,
+//           parentId: pupil.parentId,
+//           phoneNumber: pupil.phoneNumber,
+//           whenRegistered: moment(pupil.whenRegistered, "YYYY-MM-DD HH:mm:ss").format('DD/MM/YYYY HH:mm:ss'), ///
+//           medicalLimitations: pupil.medicalLimitations,
+//           paymentApprovalNumber: pupil.PaymentConfirmationNumber,
+//           payerName: pupil.name_pay,
+//           registrationSource: pupil.registration_source,
+//           status: pupil.status
+//         }
+//         trimObjectProperties(_pupil);
+//         let pupilId = uuidv4();
+//         let _group = Object.values(groups).find( group => {
+//           return group.symbol == pupil.groupSymbol}
+//         )
+//         if(_group){
+//           count++;
+//           _pupil.metadata = {};
+//           _pupil.metadata.pupilId = pupilId;
+//           _pupil.metadata.groupId = _group.metadata.groupId;
+//           _pupil.metadata.unitId = _group.metadata.unitId;
+//           _pupil.metadata.authority = _group.metadata.authority;
+//           updates[`pupils/${pupilId}`] = _pupil;
+//           updates[`groups/${_group.metadata.groupId}/metadata/pupils/${pupilId}`] = pupilId;
+//         }
+
+//       }
+//     } catch (error) {
+//       console.log(error);
+//     }
+//   });
+//   console.log("pupils num:"+ count);
+//   console.log("countError1: "+ countError1);
+//   console.log("countError2: "+ countError2);
+//   firebase.database().ref().update(updates);
+//   // console.log(updates);
+// };
+>>>>>>> pr/2
 
 
 
@@ -208,8 +273,13 @@ exports.initDatabase =  (uid, role) => {
 
     Promise.all(promises).then(()=>{
       // setTimeout( () => {
+<<<<<<< HEAD
       //       //checkDB();
       // }, 1000 * 20);
+=======
+      //       checkDB();
+      // }, 1000 * 15);
+>>>>>>> pr/2
 
     });
   } catch( err ) {
@@ -264,7 +334,7 @@ exports.initDatabase =  (uid, role) => {
 //                     groupData.groupName = groupName;
 //                     groupData.openTill = groupData.openTill ? moment.unix(groupData.openTill.seconds).format('DD/MM/YYYY') : '';
 //                     groupData.openFrom = groupData.openFrom ? moment.unix(groupData.openFrom.seconds).format('DD/MM/YYYY') : '';
-//
+
 //                     groups[groupId] = groupData;
 //                     groups[groupId].registeredPupils = ( groupData.registeredPupils ) ? groupData.registeredPupils : 0
 //                     groups[groupId].metadata = groupMetadata;
@@ -279,7 +349,7 @@ exports.initDatabase =  (uid, role) => {
 //                             //   delete pupils[pupil.doc.id];
 //                             //   delete groups[groupId].pupils[pupil.doc.id];
 //                             // }
-//
+
 //                               const pupilData = pupil.doc.data();
 //                               const pupilId = pupil.doc.id;
 //                               let pupilMetadata = {};
@@ -295,14 +365,14 @@ exports.initDatabase =  (uid, role) => {
 //                               //   groups[groupId].metadata.pupils[pupilId] = { pupilId }
 //                               // }
 //                         })
-//
+
 //                           store.dispatch({
 //                             type: 'PUPILS_CHANGED',
 //                             data: {
 //                               pupils: Object.values(pupils)
 //                             }
 //                           });
-//
+
 //                       })
 //                     }
 //                 })
@@ -312,7 +382,7 @@ exports.initDatabase =  (uid, role) => {
 //                       groups: Object.values(groups)
 //                     }
 //                   });
-//
+
 //               }
 //             )
 //           }
@@ -365,7 +435,15 @@ exports.getAllPupilsInGroup = (groupId) => {
     });
  }
 
+<<<<<<< HEAD
   return _pupils;
+=======
+// Get and return all Pupils
+exports.getAllPupilsInGroup = (groupId) => {
+    return Object.values(groups[groupId].metadata.pupils).map(( pupil )=> {
+      return pupils[pupil];
+    })
+>>>>>>> pr/2
 };
 
 // Get and return all Groups
@@ -523,6 +601,7 @@ exports.addUnit = (unit) => {
 ///////
 
 // Get and return all Pupils
+<<<<<<< HEAD
 exports.updatePupil = (unitId, oldGroupId, newGroupId, pupilId, pupil) => {
   trimObjectProperties(pupil);
   var updates = {};
@@ -541,6 +620,12 @@ exports.updatePupil = (unitId, oldGroupId, newGroupId, pupilId, pupil) => {
   updates[`pupils/${pupilId}`] = pupil;
 
   return firebase.database().ref().update(updates);
+=======
+exports.updatePupil = (unitId, groupId, pupilId, pupil) => {
+  var updates = {};
+  updates[`pupils/${pupilId}`] = pupil
+
+>>>>>>> pr/2
 };
 
 // Get and return all Groups
