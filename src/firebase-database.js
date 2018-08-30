@@ -3,7 +3,7 @@ import {store} from './index.jsx';
 import moment from 'moment';
 const uuidv4 = require('uuid/v4');
 
-var serviceAccount = require("./pupilsM.json");
+// var serviceAccount = require("./pupilsM.json");
 
 const unitsRef = firebase.firestore().collection('units');
 const authoritiesRef = firebase.firestore().collection('authorities');
