@@ -1,0 +1,61 @@
+// @flow
+import React from 'react';
+import { connect } from 'react-redux';
+import StyledFirebaseAuth from 'react-firebaseui/StyledFirebaseAuth';
+
+import firebase from 'firebase/app';
+import firebaseApp from './firebase.js';
+
+// Configure FirebaseUI.
+const uiConfig = {
+  signInFlow: 'popup',
+  signInOptions: [
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID
+  ],
+  callbacks: {
+    // Avoid redirects after sign-in.
+    signInSuccess: () => false
+  }
+};
+
+@connect()
+export default
+class Login extends React.PureComponent {
+
+  // Listen to the Firebase Auth state and set the local state.
+   componentDidMount() {
+     this.unregisterAuthObserver =
+      firebaseApp.auth().onAuthStateChanged(
+         (user) => {
+
+           if( user ) {
+
+             this.props.dispatch({
+               type: 'PAGE_NAVIGATED',
+               data: {
+                 pageName: 'ראשי',
+               }
+             });
+             
+             this.props.history.push('dashboard');
+
+          }
+       }
+     );
+   }
+
+  // Make sure we un-register Firebase observers when the component unmounts.
+  componentWillUnmount() {
+    this.unregisterAuthObserver();
+  }
+
+  render() {
+
+    return <div className='d-flex flex-lg-row justify-content-center'>
+              <div className="p-4">
+              <StyledFirebaseAuth uiConfig={uiConfig} firebaseAuth={firebaseApp.auth()}/>
+              </div>
+          </div>
+
+  }
+};
