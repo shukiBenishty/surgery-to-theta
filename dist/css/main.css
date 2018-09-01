@@ -1,0 +1,88 @@
+body, h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4 {
+  font-family: "Rubik","Arimo","Roboto", "Helvetica", "Arial", sans-serif;
+  font-weight: 300;
+  line-height: 1.5em;
+}
+
+.h5 h5 {
+  color: rgb(249, 99, 50);
+}
+
+.navbar li>a:focus, .navbar li>a:hover {
+  text-decoration: none;
+  background-color: red;
+}
+
+.nav-pills {
+  background-color: rgba(200, 200, 200, 0.2);
+}
+.nav-pills .nav-link.active, .nav-pills .show>.nav-link {
+  color: #fff;
+  background-color: rgba(200, 200, 200, 0.2);
+}
+
+.loginText
+{
+  font: 16px 'Lato', sans-serif;
+}
+
+.loginCtrl {
+  margin-top: 40px;
+}
+
+.logoutCtrl {
+  width: 60px;
+}
+
+.avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.instructions {
+  margin-top: 100px;
+  text-align: center;
+  font-weight: 300;
+  font-size: 70px;
+}
+
+.containerShift {
+  margin-top: 80px;
+}
+
+/* Now UI overrides */
+.logoMini {
+  width: 106px;
+}
+
+.tableInCard {
+  margin-top: 10px;
+}
+
+.sidebar_item {
+  font-size: 1.5em;
+}
+
+.navbar-item {
+  font-size: 14px;
+}
+
+.nav-tab {
+  color: #495057;
+}
+.nav-tab.active {
+  color: #f96332;
+}
+
+/* .sidebar-mini .sidebar,
+.sidebar-mini .sidebar .sidebar-wrapper {
+  width: 80px; } */
+
+.card-footer {
+  background-color: #2ca8ff !important;
+  color: white !important;
+}
+
+.card-footer-link {
+  color: white !important;
+}

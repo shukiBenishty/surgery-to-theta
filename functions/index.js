@@ -176,4 +176,202 @@ app.post('/pupil', (req, res) => {
         })
     });
 
+
+
+app.get('/registeredPupilsInGroups', (req, res) => {
+  let updates = {};
+  let promises = [];
+  let totalPupils = 0;
+  return realTimeDB.ref('groups').once('value').then((groupsSnapshot) => {
+    let _groups = groupsSnapshot.val();
+    for(key in _groups){
+      let _groupId = key;
+      promises.push(realTimeDB.ref('pupils')
+       .orderByChild(`/metadata/groupId`)
+       .equalTo(_groupId)
+       .once('value')
+       .then((pupilsSnapshot) => {
+             console.log(_groupId);
+             let pupilInGroup = 0;
+             let _pupils = pupilsSnapshot.val();
+             for(_pupilId in _pupils){
+               pupilInGroup++;
+               totalPupils++;
+             }
+             updates[`groups/${_groupId}/registeredPupils`] = pupilInGroup;
+             console.log(`registeredPupils in group ${_groupId}: ${pupilInGroup}`);
+             return true;
+       })
+      );
+    }
+    return Promise.all(promises)
+            .then(() => {
+              return realTimeDB.ref().update(updates).then(() => {
+                console.log(`found ${totalPupils} pupils`);
+                return res.status(200).json({
+                  totalPupils: totalPupils
+                })
+              });
+            })
+
+  })
+  .catch((err) =>{
+      console.error(err);
+      return res.status(200)
+            .json({
+                errorCode: 2,
+                errorMessage: err.message
+              });
+
+  })
+})
+
+app.get('/pupilsPropertiesTypes', (req, res) => {
+  let updates = {};
+  let promises = [];
+  return realTimeDB.ref('pupils').once('value').then((snapshot) => {
+    if (snapshot.val()) {
+        let _pupils = snapshot.val();
+        for(key in _pupils){
+          let changed = false;
+          let _pupilId = key;
+          const _pupil = _pupils[_pupilId];
+
+          if (_pupil.hasOwnProperty('pupilId')) {
+            _pupil.parentId = _pupil.pupilId.toString();
+          }
+          if (_pupil.hasOwnProperty('parentId')) {
+            _pupil.parentId = _pupil.parentId.toString();
+          }
+          if (_pupil.hasOwnProperty('medicalLimitations')) {
+            if (_pupil.medicalLimitations === "false" ||
+                 _pupil.medicalLimitations === "0" ||
+                 _pupil.medicalLimitations === 0 ) {
+                _pupil.medicalLimitations = false;
+            }else if (_pupil.medicalLimitations === "true" ||
+                     _pupil.medicalLimitations === "1" ||
+                     _pupil.medicalLimitations === 1 ) {
+                _pupil.medicalLimitations = true;
+            }
+          }
+          updates[`pupils/${_pupilId}`] = _pupil;
+        }
+        return realTimeDB.ref().update(updates).then(() => {
+          return res.status(200).json({
+            status: "ok"
+          })
+        });
+    } else {
+        return res.status(200).json({
+          status: "error",
+          errorMessage: `not pupils was found`
+        });
+    }
+  })
+  .catch((err) =>{
+    console.error(err);
+    return res.status(200)
+      .json({
+          errorCode: 2,
+          errorMessage: err.message
+    });
+  })
+})
+
 exports.api = functions.https.onRequest(app);
+
+const updataPemitions = (unitId, updates) => {
+  let promise = [];
+  return realTimeDB.ref(`units/${unitId}/metadata/permissions`).once('value').then((snapshot) => {
+    const permissions = snapshot.val();
+    promise.push(realTimeDB.ref(`groups`)
+      .orderByChild(`/metadata/unitId`).equalTo(unitId).once('value').then((groupsSnapshot) => {
+        const groups = groupsSnapshot.val();
+        for (let groupId in groups) {
+          if (groups.hasOwnProperty(groupId)) {
+            updates[`groups/${groupId}/metadata/permissions`] = permissions;
+          }
+        }
+        return true;
+      }));
+    promise.push(realTimeDB.ref(`pupils`)
+        .orderByChild(`/metadata/unitId`).equalTo(unitId).once('value').then((pupilsSnapshot) => {
+          const pupils = pupilsSnapshot.val();
+          for (let pupilId in pupils) {
+            if (pupils.hasOwnProperty(pupilId)) {
+              updates[`pupils/${pupilId}/metadata/permissions`] = permissions;
+            }
+          }
+          return true;
+        }))
+    return Promise.all(promise).then(() => {
+      return true;
+    });
+  })
+}
+
+exports.userPermissionsChanged = functions.database.ref('users/{userId}/permissions/')
+    .onWrite((change, context) => {
+      let updates = {};
+      let permissions = {};
+      let promises = [];
+
+      // when the data is deleted.
+      if (!change.after.exists()) {
+        let original = change.before.val();
+        for (let _unitId in original) {
+          if (original.hasOwnProperty(_unitId)) {
+            permissions[_unitId] = null;
+          }
+        }
+      }
+      // when the data is new.
+      if (!change.before.exists()) {
+       let document = change.after.val();
+       for (let _unitId in document) {
+         if (document.hasOwnProperty(_unitId)) {
+           permissions[_unitId] = document[_unitId];
+         }
+       }
+      }
+      // when the data is edit.
+      if (change.before.exists() && change.after.exists()) {
+       let original = change.before.val();
+       for (let _unitId in original) {
+         if (original.hasOwnProperty(_unitId)) {
+           permissions[_unitId] = null;
+         }
+       }
+
+       let document = change.after.val();
+       for (let _unitId in document) {
+         if (document.hasOwnProperty(_unitId)) {
+           permissions[_unitId] = document[_unitId];
+         }
+       }
+      }
+
+
+      return realTimeDB.ref(`users/${context.params.userId}`)
+      .once('value').then(( snapshot ) => {
+        const permissionsId = snapshot.val().permissionsId;
+        for (let _unitId in permissions) {
+          if (permissions.hasOwnProperty(_unitId)) {
+            updates[`units/${_unitId}/metadata/permissions/${permissionsId}`] = permissions[_unitId];
+          }
+        }
+        return realTimeDB.ref().update(updates).then(() => {
+          let subUpdates = {};
+          for (let key in permissions) {
+            let _unitId = key
+            if (permissions.hasOwnProperty(_unitId)) {
+              promises.push(updataPemitions(_unitId, subUpdates));
+            }
+          }
+          return Promise.all(promises).then(() => {
+            console.log(subUpdates);
+            return realTimeDB.ref().update(subUpdates);
+          });
+        })
+      })
+  });

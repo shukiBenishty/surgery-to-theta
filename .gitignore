@@ -10,18 +10,19 @@ logs
 # Dependency directories
 node_modules/
 
-dist
+dist/font
+dist/img
+
 yarn.lock
 *.lock
-<<<<<<< HEAD
+
 firebase.json
 database.rules.json
 .firebaserc
 firestore.indexes.json
 firestore.rules
 src/pupilsM.json
-.firebase/hosting.ZGlzdA.cache
+
 src/pupilsM.json
-=======
+
 *.cache
->>>>>>> pr/2

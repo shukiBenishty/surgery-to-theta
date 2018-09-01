@@ -149,7 +149,9 @@ class Dashboard extends React.Component<Props, State> {
             <Switch>
                 <Route exact path='/dashboard' render={ (props) => <Home /> } />
                 <Route path={this.props.match.path + '/lists'} component={Lists} />
-
+                  <Route path={this.props.match.path + '/users'} component={UserList} />
+                  <Route path={this.props.match.path + '/import'} component={ImportWizard} />
+                  <Route path={this.props.match.path + '/reports'} component={ReportsWizard} />
 
                 <Route path={this.props.match.path + '/inspection'} component={InspectionForm} />
                 <Route path={this.props.match.path + '/office'} component={Office} />

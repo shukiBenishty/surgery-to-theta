@@ -588,27 +588,10 @@ exports.updateUnit = (unitId, unit) => {
 
 
 // Get and return all Units
-exports.changePermissions = (user) => {
-  var updates = {};
-  if(users[user.metadata.userId].permissions){
-    for (var unitId in users[user.metadata.userId].permissions){
-      // update exist permissions
-      if (user.permissions[unitId] !== undefined) {
-          updates = updatePermissionsForAll(updates, user, unitId, user.permissions[unitId]);
-      }
-        // delete exist permissions
-       else {
-          updates = updatePermissionsForAll(updates, user, unitId, null);
-      }
-    }
-    for (var unitId in units){
-      //new permissions
-      if (user.permissions[unitId] !== undefined &&
-          users[user.metadata.userId].permissions[unitId] === undefined) {
-        updates = updatePermissionsForAll(updates, user, unitId, user.permissions[unitId]);
-      }
-    }
-    return firebase.database().ref().update(updates);
+exports.changePermissions = (user, userId) => {
+  if (user && userId) {
+    firebase.database().ref(`users/${userId}`).update(user);
+    usersRef.doc(userId).update(user);
   }
 };
 
