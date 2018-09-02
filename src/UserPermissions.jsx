@@ -186,6 +186,7 @@ class UserPermissions extends React.Component<{}, State> {
       if (item.symbol !== "סמל מוסד") {
         user.permissions[item.metadata.unitId] = (user.permissions[item.metadata.unitId]) ? user.permissions[item.metadata.unitId] : {};
         user.permissions[item.metadata.unitId].write = e.target.checked;
+        user.permissions[item.metadata.unitId].read = e.target.checked;
       } else {
         writeForAll = e.target.checked;
         self.props.units.forEach((unit)=>{
