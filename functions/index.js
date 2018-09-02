@@ -312,6 +312,7 @@ const updataPemitions = (unitId, updates) => {
 
 exports.userPermissionsChanged = functions.database.ref('users/{userId}/permissions/')
     .onWrite((change, context) => {
+      console.log(`permissions changed for user: ${context.params.userId}`)
       let updates = {};
       let permissions = {};
       let promises = [];
