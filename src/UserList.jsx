@@ -29,30 +29,18 @@ class UserList extends React.Component<{}, State> {
 
 
   componentDidMount() {
-
-      const _users = [];
-
-      // this.props.users.forEach( (_data) => {
-      //   _users.push({
-      //     userId: _data.metadata.userId,
-      //     first_name: _data.first_name,
-      //     last_name: _data.last_name,
-      //     email: _data.email,
-      //     role: _data.role
-      //   });
-      //
-      // });
-
-      this.setState({
-        loading: false,
-        users: _users
-      })
-
+      if(this.props.users.length != 0 ){
+        this.setState({
+          loading: false,
+          users: this.props.users
+        })
+      }
   }
 
   shouldComponentUpdate(nextProps, nextState) {
     if (nextProps.users !== this.props.users) {
       this.setState({
+        loading: false,
         users: nextProps.users
       })
     }

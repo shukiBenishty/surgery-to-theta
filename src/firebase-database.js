@@ -15,12 +15,13 @@ let RDBgroupsRef = firebase.database().ref('groups');
 let RDBauthoritiesRef = firebase.database().ref('authorities');
 let RDBusersRef = firebase.database().ref('users')
 
-var authorities = {};
-var units = {};
-var groups = {};
-var pupils = {};
-var users = {};
-var userPermissionsId = '';
+let authorities = {};
+let units = {};
+let groups = {};
+let pupils = {};
+let users = {};
+let userPermissionsId = '';
+let initialized = false;
 
 const trimObjectProperties = (objectToTrim) => {
     for (var key in objectToTrim) {
@@ -134,72 +135,76 @@ const trimObjectProperties = (objectToTrim) => {
 // };
 
 exports.initDatabase = (permissionsId, role) => {
-  try {
+  if (!initialized) {
+    initialized = true;
 
-    let promises = [];
+    try {
 
-    if (role.toLowerCase() !== 'admin') {
+      let promises = [];
 
-      RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
-      RDBpupilsRef = RDBpupilsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
-      RDBgroupsRef = RDBgroupsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
-      // RDBauthoritiesRef = RDBauthoritiesRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
-      // RDBusersRef = RDBusersRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+      if (role.toLowerCase() !== 'admin') {
+
+        RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+        RDBpupilsRef = RDBpupilsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+        RDBgroupsRef = RDBgroupsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+        // RDBauthoritiesRef = RDBauthoritiesRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+        // RDBusersRef = RDBusersRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+      }
+      promises.push(RDBunitsRef.on('value', (snapshot) => {
+        units = snapshot.val();
+          store.dispatch({
+            type: 'UNITS_CHANGED',
+            data: {
+              units: (units) ? Object.values(units) : []
+            }
+          });
+      }));
+      promises.push(RDBgroupsRef.on('value', (snapshot) => {
+        groups = snapshot.val();
+          store.dispatch({
+            type: 'GROUPS_CHANGED',
+            data: {
+              groups: (groups) ? Object.values(groups) : []
+            }
+          });
+      }));
+      promises.push(RDBpupilsRef.on('value', (snapshot) => {
+        pupils = snapshot.val();
+          store.dispatch({
+            type: 'PUPILS_CHANGED',
+            data: {
+              pupils: (pupils) ? Object.values(pupils) : []
+            }
+          });
+      }));
+      promises.push(RDBauthoritiesRef.on('value', (snapshot) => {
+        authorities = snapshot.val();
+          store.dispatch({
+            type: 'AUTHORITIES_CHANGED',
+            data: {
+              authorities: (authorities) ? Object.values(authorities) : []
+            }
+          });
+      }));
+      promises.push(RDBusersRef.on('value', (snapshot) => {
+        users = snapshot.val();
+          store.dispatch({
+            type: 'USERS_CHANGED',
+            data: {
+              users: (users) ? Object.values(users) : []
+            }
+          });
+      }));
+
+      Promise.all(promises).then(()=>{
+        // setTimeout( () => {
+        //       // checkDB();
+        // }, 1000 * 20);
+
+      });
+    } catch( err ) {
+        console.error(err);
     }
-    promises.push(RDBunitsRef.on('value', (snapshot) => {
-      units = snapshot.val();
-        store.dispatch({
-          type: 'UNITS_CHANGED',
-          data: {
-            units: (units) ? Object.values(units) : []
-          }
-        });
-    }));
-    promises.push(RDBgroupsRef.on('value', (snapshot) => {
-      groups = snapshot.val();
-        store.dispatch({
-          type: 'GROUPS_CHANGED',
-          data: {
-            groups: (groups) ? Object.values(groups) : []
-          }
-        });
-    }));
-    promises.push(RDBpupilsRef.on('value', (snapshot) => {
-      pupils = snapshot.val();
-        store.dispatch({
-          type: 'PUPILS_CHANGED',
-          data: {
-            pupils: (pupils) ? Object.values(pupils) : []
-          }
-        });
-    }));
-    promises.push(RDBauthoritiesRef.on('value', (snapshot) => {
-      authorities = snapshot.val();
-        store.dispatch({
-          type: 'AUTHORITIES_CHANGED',
-          data: {
-            authorities: (authorities) ? Object.values(authorities) : []
-          }
-        });
-    }));
-    promises.push(RDBusersRef.on('value', (snapshot) => {
-      users = snapshot.val();
-        store.dispatch({
-          type: 'USERS_CHANGED',
-          data: {
-            users: (users) ? Object.values(users) : []
-          }
-        });
-    }));
-
-    Promise.all(promises).then(()=>{
-      // setTimeout( () => {
-      //       // checkDB();
-      // }, 1000 * 20);
-
-    });
-  } catch( err ) {
-      console.error(err);
   }
 };
 

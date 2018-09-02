@@ -41,13 +41,9 @@ type Props = {
 
 
 const mapStateToProps = (state) => {
-  return {
-    userName: state.userName,
-    userPictureUrl: state.userPictureUrl
-  }
+  return {}
 }
 
-@withAuth
 @connect(mapStateToProps)
 export default
 class Dashboard extends React.Component<Props, State> {
@@ -74,82 +70,71 @@ class Dashboard extends React.Component<Props, State> {
           }
         });
 
+        firebase.database().ref('users').orderByChild(`/email`)
+        .equalTo(email).once('value')
         // get user's role
-        firebase.firestore().collection('users')
-                .where("email", "==", email)
-                .get()
-                .then( response => {
+        .then( response => {
+            let role = 'user';
+            if(!response.val()) {
 
-                    if( response.docs.length == 0 ) {
+              firebase.auth().signOut();
 
-                      firebase.auth().signOut();
+              throw new Error(`No user with email ${email} is registered`);
 
-                      throw new Error(`No user with email ${email} is registered`);
+            } else {
 
-                    } else {
-
-                      const docSnapshot = response.docs[0];
-                      this.props.dispatch({
-                        type: 'USER_PERMISSION_ID_CHANGED',
-                        data: {
-                          userPermissisionId: docSnapshot.data().permissionsId
-                        }
-                      });
-
-                      database.initDatabase(docSnapshot.data().permissionsId, docSnapshot.data().role);
-                      return docSnapshot.data().role;
-
+              const docSnapshot = response.val();
+              for (const userId in docSnapshot) {
+               if (docSnapshot.hasOwnProperty(userId)) {
+                 const _user = docSnapshot[userId];
+                 role = _user.role;
+                 this.props.dispatch({
+                    type: 'USER_PERMISSION_ID_CHANGED',
+                    data: {
+                      userPermissisionId: (_user.permissionsId) ? _user.permissionsId : {}
                     }
-                })
-                // firebase.database().ref('users').orderByChild(`/email`)
-                // .equalTo(email).once('value')
-                // // get user's role
-                // .then( response => {
+                  });
+                  self.props.dispatch({
+                                     type: 'USER_CHANGED',
+                                     data: {
+                                       secRoles: _user.userRoles || [''],
+                                       permissions: (_user.permissions) ? _user.permissions : {},
+                                       email: _user.email,
+                                       isAdmin: _user.role.toLowerCase() === 'admin' ? true : false
+                                     }
+                                   });
+                  database.initDatabase(_user.permissionsId, _user.role);
+                }
+              }
+            }
+            return role;
+          })
+          .then( role => {
+              // get allowed routes for the found role
+              firebase.firestore().collection('dashboard_routes')
+              .where("forRoles." + role, "==", true)
+              .get()
+              .then( response => {
 
-                //     if(!response.val()) {
+                const _routes = response.docs.map( docSnapshot => (
+                    docSnapshot.data().name
+                ));
 
-                //       firebase.auth().signOut();
+                // filter existing routes with allowed ones
+                const allowedRoutes = dashboardRoutes.filter( route =>
+                    _routes.includes(route.name) || route.redirect
+                );
 
-                //       throw new Error(`No user with email ${email} is registered`);
-
-                //     } else {
-
-                //       const docSnapshot = response.val();
-                //       for (const userId in docSnapshot) {
-                //         if (docSnapshot.hasOwnProperty(userId)) {
-                //           const _user = docSnapshot[userId];
-                //           database.initDatabase(_user.permissionsId, _user.role);
-                //           return _user.role;
-                //         }
-                //       }
-                //     }
-                // })
-                .then( role => {
-                    // get allowed routes for the found role
-                    firebase.firestore().collection('dashboard_routes')
-                    .where("forRoles." + role, "==", true)
-                    .get()
-                    .then( response => {
-
-                      const _routes = response.docs.map( docSnapshot => (
-                          docSnapshot.data().name
-                      ));
-
-                      // filter existing routes with allowed ones
-                      const allowedRoutes = dashboardRoutes.filter( route =>
-                          _routes.includes(route.name) || route.redirect
-                      );
-
-                      self.setState({
-                        routes: allowedRoutes
-                      });
-
-                    })
-
-                })
-                .catch( err => {
-                  console.log(err);
+                self.setState({
+                  routes: allowedRoutes
                 });
+
+              })
+
+          })
+          .catch( err => {
+            console.log(err);
+          });
 
       }
       else {
