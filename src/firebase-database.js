@@ -152,58 +152,48 @@ exports.initDatabase =  (uid, role) => {
     }
     promises.push(RDBunitsRef.on('value', (snapshot) => {
       units = snapshot.val();
-      if (units) {
         store.dispatch({
           type: 'UNITS_CHANGED',
           data: {
-            units: Object.values(units)
+            units: (units) ? Object.values(units) : []
           }
         });
-      }
     }));
     promises.push(RDBgroupsRef.on('value', (snapshot) => {
       groups = snapshot.val();
-      if (groups) {
         store.dispatch({
           type: 'GROUPS_CHANGED',
           data: {
-            groups: Object.values(groups)
+            groups: (groups) ? Object.values(groups) : [] 
           }
         });
-      }
     }));
     promises.push(RDBpupilsRef.on('value', (snapshot) => {
       pupils = snapshot.val();
-      if (pupils) {
         store.dispatch({
           type: 'PUPILS_CHANGED',
           data: {
-            pupils: Object.values(pupils)
+            pupils: (pupils) ? Object.values(pupils) : []
           }
         });
-      }
     }));
     promises.push(RDBauthoritiesRef.on('value', (snapshot) => {
       authorities = snapshot.val();
-      if (authorities) {
         store.dispatch({
           type: 'AUTHORITIES_CHANGED',
           data: {
-            authorities: Object.values(authorities)
+            authorities: (authorities) ? Object.values(authorities) : []
           }
         });
-      }
     }));
     promises.push(RDBusersRef.on('value', (snapshot) => {
       users = snapshot.val();
-      if (users) {
         store.dispatch({
           type: 'USERS_CHANGED',
           data: {
-            users: Object.values(users)
+            users: (users) ? Object.values(users) : []
           }
         });
-      }
     }));
 
     Promise.all(promises).then(()=>{
@@ -337,19 +327,44 @@ exports.initDatabase =  (uid, role) => {
 ////////// get all //////////
 
 // Get and return all Pupils
-exports.getAllPupils = () => {  return Object.values(pupils);  };
+exports.getAllPupils = () => {  
+  if(pupils){
+    return Object.values(pupils);  
+  }
+  return [];
+};
 
 // Get and return all Groups
-exports.getAllGroups = () => {  return Object.values(groups);  };
+exports.getAllGroups = () => {  
+  if(groups){
+    return Object.values(groups);   
+  }
+  return [];
+};
 
 // Get and return all Units
-exports.getAllUnits = () => { return Object.values(units); };
+exports.getAllUnits = () => { 
+  if(units){
+    return Object.values(units);   
+  }
+  return [];
+};
 
 // Get and return all Users
-exports.getAllUsers = () => { return Object.values(users); };
+exports.getAllUsers = () => { 
+  if(users){
+    return Object.values(users);   
+  }
+  return [];
+};
 
 // Get and return all Authorities
-exports.getAllAuthorities = () => { return Object.values(authorities); };
+exports.getAllAuthorities = () => {
+  if(authorities){
+    return Object.values(authorities);   
+  }
+  return []; 
+};
 
 // Get and return all Pupils
 exports.getAllPupilsInGroup = (groupId) => {
@@ -401,27 +416,43 @@ exports.getAllUnitsInAuthority = (authorityId) => {
 
 // Get and return all Pupils
 exports.getPupilById = (pupilId) => {
-  return pupils[pupilId];
+  if(pupils){
+    return pupils[pupilId];
+  }
+  return {};
 };
 
 // Get and return all Groups
 exports.getGroupById = (groupId) => {
+  if(groups){
     return groups[groupId];
+  }
+  return {};
 };
 
 // Get and return all Units
 exports.getUnitById = (unitId) => {
-  return units[unitId];
+  if(units){
+    return units[unitId];
+  }
+  return {};
+
 };
 
 // Get and return all Users
 exports.getAuthorityById = (authorityId) => {
+  if(authorities){
     return authorities[authorityId];
+  }
+  return {};
 };
 
 // Get and return all Users
 exports.getUserById = (userId) => {
+  if(units){
     return users[userId];
+  }
+  return {};
 };
 
 //////
