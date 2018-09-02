@@ -12,6 +12,7 @@ node_modules/
 
 dist/font
 dist/img
+dist/main.js
 
 yarn.lock
 *.lock
