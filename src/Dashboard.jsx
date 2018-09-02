@@ -91,11 +91,34 @@ class Dashboard extends React.Component<Props, State> {
                     } else {
 
                       const docSnapshot = response.docs[0];
-                      database.initDatabase(user.uid, docSnapshot.data().role);
+                      database.initDatabase(docSnapshot.data().permissionsId, docSnapshot.data().role);
                       return docSnapshot.data().role;
 
                     }
                 })
+                // firebase.database().ref('users').orderByChild(`/email`)
+                // .equalTo(email).once('value')
+                // // get user's role
+                // .then( response => {
+        
+                //     if(!response.val()) {
+        
+                //       firebase.auth().signOut();
+        
+                //       throw new Error(`No user with email ${email} is registered`);
+        
+                //     } else {
+        
+                //       const docSnapshot = response.val();
+                //       for (const userId in docSnapshot) {
+                //         if (docSnapshot.hasOwnProperty(userId)) {
+                //           const _user = docSnapshot[userId];
+                //           database.initDatabase(_user.permissionsId, _user.role);
+                //           return _user.role;
+                //         }
+                //       }
+                //     }
+                // })
                 .then( role => {
                     // get allowed routes for the found role
                     firebase.firestore().collection('dashboard_routes')

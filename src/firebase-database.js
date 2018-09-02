@@ -21,7 +21,7 @@ var units = {};
 var groups = {};
 var pupils = {};
 var users = {};
-var uid = '';
+
 
 
 const trimObjectProperties = (objectToTrim) => {
@@ -137,18 +137,17 @@ const trimObjectProperties = (objectToTrim) => {
 
 
 
-exports.initDatabase =  (uid, role) => {
+exports.initDatabase =  (permissionsId, role) => {
   try {
-    uid = uid;
     let promises = [];
 
     if (role.toLowerCase() !== 'admin') {
       //useer permissions not redy
-      RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/1234/read`).equalTo(true);
-      RDBpupilsRef = RDBpupilsRef.orderByChild(`/metadata/permissions/1234/read`).equalTo(true);
-      RDBgroupsRef = RDBgroupsRef.orderByChild(`/metadata/permissions/1234/read`).equalTo(true);
-      // RDBauthoritiesRef = RDBauthoritiesRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
-      // RDBusersRef = RDBusersRef.orderByChild(`/metadata/permissions/${uid}/read`).equalTo(true);
+      RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+      RDBpupilsRef = RDBpupilsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+      RDBgroupsRef = RDBgroupsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+      // RDBauthoritiesRef = RDBauthoritiesRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
+      // RDBusersRef = RDBusersRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
     }
     promises.push(RDBunitsRef.on('value', (snapshot) => {
       units = snapshot.val();
