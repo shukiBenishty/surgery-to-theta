@@ -27,3 +27,4 @@ src/pupilsM.json
 src/pupilsM.json
 
 *.cache
+dist/main.js

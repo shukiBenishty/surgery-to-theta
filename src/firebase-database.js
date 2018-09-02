@@ -431,7 +431,9 @@ exports.deletePupilById = (unitId, groupId, pupilId) => {
   let updates = {};
   updates[`pupils/${pupilId}`] = null
   updates[`groups/${groupId}/metadata/pupils/${pupilId}`] = null
-  updates[`groups/${groupId}/registeredPupils`] = groups[groupId].registeredPupils - 1
+  if(groups[groupId].registeredPupils){
+    updates[`groups/${groupId}/registeredPupils`] = groups[groupId].registeredPupils - 1
+  }
   return firebase.database().ref().update(updates);
 };
 
@@ -471,15 +473,22 @@ exports.addPupil = (unitId, groupId, pupil) => {
   let unit = units[unitId];
   let pupilId = uuidv4();
   try {
+    pupil.whenRegistered = moment().format('YYYY-MM-DD HH:mm:ss');
+
     pupil.metadata = {};
-    pupil.metadata.authority = unit.authority;
+    pupil.metadata.authority = unit.authority || null;
     pupil.metadata.unitId = unitId;
     pupil.metadata.groupId = groupId;
     pupil.metadata.pupilId = pupilId;
-    pupil.whenRegistered = moment().format('YYYY-MM-DD HH:mm:ss');
+    if(units[unitId].metadata){
+      pupil.metadata.permissions = units[unitId].metadata.permissions || null;
+    }
+  
     updates[`pupils/${pupilId}`] = pupil;
     updates[`groups/${groupId}/metadata/pupils/${pupilId}`] = pupilId;
-    updates[`groups/${groupId}/registeredPupils`] = groups[groupId].registeredPupils + 1;
+    if(groups[groupId].registeredPupils){
+      updates[`groups/${groupId}/registeredPupils`] = groups[groupId].registeredPupils + 1;
+    }
     return firebase.database().ref().update(updates);
   } catch (e) {
     console.error(e);
@@ -494,10 +503,13 @@ exports.addGroup = (unitId, group) => {
   let groupId = uuidv4();
   try {
     group.metadata = {};
-    group.metadata.authority = unit.authority;
+    group.metadata.authority = unit.authority || null;
     group.metadata.unitId = unitId;
     group.metadata.groupId = groupId;
     group.registeredPupils = 0;
+    if(units[unitId].metadata){
+      group.metadata.permissions = units[unitId].metadata.permissions || null;
+    }
     updates[`groups/${groupId}`] = group;
     updates[`units/${unitId}/metadata/groups/${groupId}`] = groupId
 
@@ -514,7 +526,7 @@ exports.addUnit = (unit) => {
   let unitId = uuidv4();
   try {
     unit.metadata = {};
-    unit.metadata.authority = unit.authority;
+    unit.metadata.authority = unit.authority || null;
     updates[`units/${unitId}`] = unit;
     return firebase.database().ref().update(updates);
   } catch (e) {
@@ -536,14 +548,22 @@ exports.updatePupil = (unitId, oldGroupId, newGroupId, pupilId, pupil) => {
   //change group
   if (oldGroupId !== newGroupId) {
       updates[`groups/${oldGroupId}/metadata/pupils/${pupilId}`] = null;
-      updates[`groups/${oldGroupId}/registeredPupils`] = groups[oldGroupId].registeredPupils - 1;
-      updates[`groups/${newGroupId}/registeredPupils`] = groups[newGroupId].registeredPupils + 1;
+      if(groups[oldGroupId].registeredPupils){
+        updates[`groups/${oldGroupId}/registeredPupils`] = groups[oldGroupId].registeredPupils - 1;
+      }
+      if(groups[newGroupId].registeredPupils){
+        updates[`groups/${newGroupId}/registeredPupils`] = groups[newGroupId].registeredPupils + 1;
+      }
   }
   pupil.metadata = {};
-  pupil.metadata.authority = units[unitId].authority;
+  pupil.metadata.authority = units[unitId].authority || null;
   pupil.metadata.unitId = unitId;
   pupil.metadata.groupId = newGroupId;
   pupil.metadata.pupilId = pupilId;
+  if(units[unitId].metadata){
+    pupil.metadata.permissions = units[unitId].metadata.permissions || null;
+  }
+
   updates[`groups/${newGroupId}/metadata/pupils/${pupilId}`] = pupilId;
   updates[`pupils/${pupilId}`] = pupil;
 
@@ -556,12 +576,14 @@ exports.updateGroup = (unitId, groupId, group) => {
   var updates = {};
 
   group.metadata = {};
-  group.metadata.authority = units[unitId].authority;
+  group.metadata.authority = units[unitId].authority || null;
   group.metadata.unitId = unitId;
   group.metadata.groupId = groupId;
-  let _pupils = groups[groupId].metadata.pupils;
-  if (_pupils) {
-    group.metadata.pupils = groups[groupId].metadata.pupils;
+  if(units[unitId].metadata){
+    group.metadata.permissions = units[unitId].metadata.permissions || null;
+  }
+  if(groups[groupId].metadata){
+    group.metadata.pupils = groups[groupId].metadata.pupils || null;
   }
   updates[`groups/${groupId}`] = group;
 
@@ -572,9 +594,12 @@ exports.updateGroup = (unitId, groupId, group) => {
 exports.updateUnit = (unitId, unit) => {
   trimObjectProperties(unit);
   unit.metadata = {};
-  unit.metadata.authority = units[unitId].authority;
+  unit.metadata.authority = unit.authority;
   unit.metadata.unitId = unitId;
-  unit.metadata.groups = units[unitId].groups;
+  if(units[unitId].metadata){
+    unit.metadata.groups = units[unitId].metadata.groups || null;
+    unit.metadata.permissions = units[unitId].metadata.permissions || null;
+  }
   updates[`units/${unitId}`] = unit;
 
   return firebase.database().ref().update(updates);
@@ -605,23 +630,23 @@ exports.changePermissions = (user, userId) => {
 // };
 
 
-const updatePermissionsForAll = (updates, user, unitId, newPermissions) => {
-  if (unitId === undefined) {
-    console.log('error is hear');
-  }
-  updates[`units/${unitId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
-  for (var groupId in groups){
-    if (groups[groupId].metadata.unitId === unitId) {
-      updates[`groups/${groupId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
-    }
-  }
-  for (var pupilId in pupils){
-    if (pupils[pupilId].metadata.unitId === unitId) {
-      updates[`pupils/${pupilId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
-    }
-  }
-  return updates;
-}
+// const updatePermissionsForAll = (updates, user, unitId, newPermissions) => {
+//   if (unitId === undefined) {
+//     console.log('error is hear');
+//   }
+//   updates[`units/${unitId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
+//   for (var groupId in groups){
+//     if (groups[groupId].metadata.unitId === unitId) {
+//       updates[`groups/${groupId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
+//     }
+//   }
+//   for (var pupilId in pupils){
+//     if (pupils[pupilId].metadata.unitId === unitId) {
+//       updates[`pupils/${pupilId}/metadata/permissions/${user.metadata.userId}`] = newPermissions
+//     }
+//   }
+//   return updates;
+// }
 
 const setupRealDataBase = async () => {
   trimObjectProperties(units);
