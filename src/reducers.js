@@ -13,7 +13,8 @@ const INITIAL_STATE = {
   groups: [],
   userName: '',
   userPictureUrl: '',
-  pageName: ''
+  pageName: '',
+  userPermissisionId: ''
 };
 
 
@@ -81,6 +82,14 @@ const reducers = (state = INITIAL_STATE, action) => {
       state = _.assign({}, state, {
                                     users: action.data.users
                                   });
+    }
+    break;
+
+    case 'USER_PERMISSION_ID_CHANGED': {
+      state = _.assign({}, state, {
+                                    userPermissisionId: action.data.userPermissisionId
+                                  });
+
     }
     break;
 

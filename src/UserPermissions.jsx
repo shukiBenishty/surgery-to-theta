@@ -3,7 +3,7 @@ import React from 'react';
 import { connect } from 'react-redux';
 import firebase from './firebase.js';
 import { Card, CardHeader, CardBody,
-  Row, Col,
+  Row, Col, Button,
   Tooltip } from 'reactstrap';
 import DropdownList from 'react-widgets/lib/DropdownList';
 import classNames from 'classnames';
@@ -19,8 +19,8 @@ type State = {
   allowUnitDelete: Boolean,
   saveChangingTooltipOpen: Boolean,
   unitsDisabled: Boolean,
-  role: String
-
+  role: String,
+  toggleButtonText: String
 }
 
 const deepCopy = (mainObj) => {
@@ -46,7 +46,7 @@ class UserPermissions extends React.Component<{}, State> {
   state = {
     readForAll: false,
     writeForAll: false,
-    unitsListOpen: false,
+    unitsListOpen: true,
     units: [],
     groupRoles: [],
     selectedGroup: '',
@@ -56,16 +56,24 @@ class UserPermissions extends React.Component<{}, State> {
     allowUnitDelete: false,
     saveChangingTooltipOpen: false,
     unitsDisabled: false,
-    role: undefined
+    role: undefined,
+    toggleButtonText: 'בטל'
   }
 
   componentDidMount() {
 
+      const _user  = database.getUserById(this.props.userId);
+      let roleLabel = _user.role === 'admin' ? 'מנהל' : 'משתמש';
+
       this.setState({
         users: this.props.users,
         userId: this.props.userId,
-        user: deepCopy(database.getUserById(this.props.userId)),
-        units: this.props.units
+        user: deepCopy(_user),
+        units: this.props.units,
+        role: {
+          label: roleLabel,
+          role: _user.role
+        }
       });
    }
 
@@ -76,6 +84,7 @@ class UserPermissions extends React.Component<{}, State> {
          user: deepCopy(database.getUserById(this.props.userId))
        })
      }
+
      if (nextState !== this.state) {
        return true;
      } else {
@@ -85,15 +94,7 @@ class UserPermissions extends React.Component<{}, State> {
 
 
   openCloseUnitsList = () => {
-          ///for test
-    if(this.state.unitsListOpen){
-      database.changePermissions(this.state.user).then((res) => {
-        console.log(res)
-      }).catch((err) => {
-        console.log(err)
-      })
-    }
-    ///////
+
     this.setState({
       unitsListOpen: !this.state.unitsListOpen
     })
@@ -116,11 +117,34 @@ class UserPermissions extends React.Component<{}, State> {
   }
 
   toogleSaveChangingTooltip(ev) {
+
     this.setState({
       saveChangingTooltipOpen: !this.state.saveChangingTooltipOpen
     });
   }
 
+  onSave() {
+
+    this.setState({
+      unitsListOpen: false
+    },
+    () => database.changePermissions(this.state.user, this.props.userId));
+
+  }
+
+  onCancel() {
+
+    this.setState({
+      unitsListOpen: !this.state.unitsListOpen,
+    }, () => {
+
+      let buttonText = this.state.unitsListOpen ? 'בטל' : 'פתח';
+      this.setState({
+        toggleButtonText: buttonText
+      });
+
+    });
+  }
 
   ListUnits = ({item}) => {
     let textStyle = {}
@@ -207,7 +231,7 @@ class UserPermissions extends React.Component<{}, State> {
             className='checkbox'/>
         </Col>
         <Col md='2'>
-          <label >כתיבה</label>
+          <label>כתיבה</label>
         </Col>
         <Col md='1'>
           <input  className='form-check-input'
@@ -231,13 +255,10 @@ class UserPermissions extends React.Component<{}, State> {
     );
 
 
-    let filterGroupName = (item, value) => {
-      const groupSymbol = item.substr(6, item.length);
-      return groupSymbol.indexOf(value) === 0;
-    }
-
     let filterUnitName = (item, value) => {
-      return item.symbol.indexOf(value) === 0 || item.unitName.indexOf(value) === 0;
+      return item.symbol.indexOf(value) === 0
+      || item.unitName.indexOf(value) === 0
+      || item.authority.indexOf(value) === 0;
     }
 
     const saveChanging = classNames({
@@ -246,6 +267,9 @@ class UserPermissions extends React.Component<{}, State> {
       'fa-trash': true
     });
 
+    let GroupHeading = ({ item }) => (
+      <span>{'רשות: ' + item}</span>
+    );
 
     return(
       <Card>
@@ -264,67 +288,56 @@ class UserPermissions extends React.Component<{}, State> {
           <Row>
             <Col md='3'>
               <DropdownList
-                  placeholder='סנן לפי רשויות'
+                  placeholder='בחר התפקיד'
+                  isRtl={true}
                   value={this.state.role}
-                  data={[{label:"משתמש" , role: "user"},{label:"מנהל", role:"admin"}]}
+                  data={[
+                          {label:"משתמש" , role: "user"},
+                          {label:"מנהל", role: "admin"}
+                        ]}
                   textField="label"
                   onChange={::this.roleChange}
                   />
             </Col>
-            <Col md='1' id='RoleTooltipContainer' style={{
-                lineHeight: '2.5em',
-                paddingRight: '0',
-                textAlign: 'start'
-              }}>
-                <i className={saveChanging} id='saveRoleChangingElement'
-                  onClick={::this.saveRoleChanging}></i>
-                <Tooltip placement='top'
-                  autohide={false}
-                  isOpen={this.state.unitsDisabled}
-                  toggle={::this.toogleSaveChangingTooltip}
-                  container='RoleTooltipContainer'
-                  style={{
-                    backgroundColor: 'black',
-                    color: 'white'
-                  }}
-                  target='saveRoleChangingElement'>
-                  לחץ לשמירת השינויים
-                </Tooltip>
-            </Col>
             <Col md='7'>
-              <DropdownList onFocus={::this.openCloseUnitsList} onBlur={::this.openCloseUnitsList}
+              <DropdownList
                   filter={filterUnitName}
                   itemComponent={this.ListUnits}
                   valueComponent={this.ListUnits}
                   value={{"symbol": "סמל מוסד", "unitName": "שם מוסד"}}
                   open={this.state.unitsListOpen}
+                  onToggle={ ()=>{}}
                   data={this.state.units}
                   groupBy="authority"
+                  groupComponent={GroupHeading}
                   disabled={this.state.unitsDisabled}
                   messages={{
-                    emptyFilter: 'לא נמצאו תוצאות סינון'
+                    emptyFilter: 'לא נמצאו תוצאות סינון',
+                    filterPlaceholder: 'סנן לפי שם מוסד, סמל מוסד או רשות'
                   }}
                   />
             </Col>
-            <Col md='1' id='unitTooltipContainer' style={{
-                lineHeight: '2.5em',
+            <Col md='2' id='unitTooltipContainer' style={{
+                lineHeight: '2.1em',
                 paddingRight: '0',
                 textAlign: 'start'
               }}>
-                <i className={saveChanging} id='saveChangingElement'
-                  onClick={::this.saveChanging}></i>
-                <Tooltip placement='top'
-                  autohide={false}
-                  isOpen={this.state.saveChangingTooltipOpen}
-                  toggle={::this.toogleSaveChangingTooltip}
-                  container='unitTooltipContainer'
-                  style={{
-                    backgroundColor: 'black',
-                    color: 'white'
-                  }}
-                  target='saveChangingElement'>
-                  לחץ לשמירת השינויים
-                </Tooltip>
+                <Row>
+                  <Col md='3'>
+                    <button type='button'
+                            className='btn-outline-primary'
+                            onClick={::this.onSave}>
+                      שמור
+                    </button>
+                  </Col>
+                  <Col md='3'>
+                    <button type='button'
+                            className='btn-outline-primary'
+                            onClick={::this.onCancel}>
+                          {this.state.toggleButtonText}
+                    </button>
+                  </Col>
+                </Row>
             </Col>
           </Row>
           <br />

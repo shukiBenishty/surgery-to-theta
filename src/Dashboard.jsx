@@ -57,7 +57,7 @@ class Dashboard extends React.Component<Props, State> {
       error: ''
   }
 
-  componentWillMount() {
+  componentDidMount() {
 
     const self = this;
 
@@ -74,8 +74,6 @@ class Dashboard extends React.Component<Props, State> {
           }
         });
 
-
-
         // get user's role
         firebase.firestore().collection('users')
                 .where("email", "==", email)
@@ -91,6 +89,13 @@ class Dashboard extends React.Component<Props, State> {
                     } else {
 
                       const docSnapshot = response.docs[0];
+                      this.props.dispatch({
+                        type: 'USER_PERMISSION_ID_CHANGED',
+                        data: {
+                          userPermissisionId: docSnapshot.data().permissionsId
+                        }
+                      });
+
                       database.initDatabase(docSnapshot.data().permissionsId, docSnapshot.data().role);
                       return docSnapshot.data().role;
 
@@ -100,15 +105,15 @@ class Dashboard extends React.Component<Props, State> {
                 // .equalTo(email).once('value')
                 // // get user's role
                 // .then( response => {
-        
+
                 //     if(!response.val()) {
-        
+
                 //       firebase.auth().signOut();
-        
+
                 //       throw new Error(`No user with email ${email} is registered`);
-        
+
                 //     } else {
-        
+
                 //       const docSnapshot = response.val();
                 //       for (const userId in docSnapshot) {
                 //         if (docSnapshot.hasOwnProperty(userId)) {

@@ -15,14 +15,12 @@ let RDBgroupsRef = firebase.database().ref('groups');
 let RDBauthoritiesRef = firebase.database().ref('authorities');
 let RDBusersRef = firebase.database().ref('users')
 
-
 var authorities = {};
 var units = {};
 var groups = {};
 var pupils = {};
 var users = {};
-
-
+var userPermissionsId = '';
 
 const trimObjectProperties = (objectToTrim) => {
     for (var key in objectToTrim) {
@@ -135,14 +133,13 @@ const trimObjectProperties = (objectToTrim) => {
 //   // console.log(updates);
 // };
 
-
-
-exports.initDatabase =  (permissionsId, role) => {
+exports.initDatabase = (permissionsId, role) => {
   try {
+
     let promises = [];
 
     if (role.toLowerCase() !== 'admin') {
-      //useer permissions not redy
+
       RDBunitsRef = RDBunitsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
       RDBpupilsRef = RDBpupilsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
       RDBgroupsRef = RDBgroupsRef.orderByChild(`/metadata/permissions/${permissionsId}/read`).equalTo(true);
@@ -163,7 +160,7 @@ exports.initDatabase =  (permissionsId, role) => {
         store.dispatch({
           type: 'GROUPS_CHANGED',
           data: {
-            groups: (groups) ? Object.values(groups) : [] 
+            groups: (groups) ? Object.values(groups) : []
           }
         });
     }));
@@ -326,33 +323,33 @@ exports.initDatabase =  (permissionsId, role) => {
 ////////// get all //////////
 
 // Get and return all Pupils
-exports.getAllPupils = () => {  
+exports.getAllPupils = () => {
   if(pupils){
-    return Object.values(pupils);  
+    return Object.values(pupils);
   }
   return [];
 };
 
 // Get and return all Groups
-exports.getAllGroups = () => {  
+exports.getAllGroups = () => {
   if(groups){
-    return Object.values(groups);   
+    return Object.values(groups);
   }
   return [];
 };
 
 // Get and return all Units
-exports.getAllUnits = () => { 
+exports.getAllUnits = () => {
   if(units){
-    return Object.values(units);   
+    return Object.values(units);
   }
   return [];
 };
 
 // Get and return all Users
-exports.getAllUsers = () => { 
+exports.getAllUsers = () => {
   if(users){
-    return Object.values(users);   
+    return Object.values(users);
   }
   return [];
 };
@@ -360,9 +357,9 @@ exports.getAllUsers = () => {
 // Get and return all Authorities
 exports.getAllAuthorities = () => {
   if(authorities){
-    return Object.values(authorities);   
+    return Object.values(authorities);
   }
-  return []; 
+  return [];
 };
 
 // Get and return all Pupils
@@ -448,7 +445,7 @@ exports.getAuthorityById = (authorityId) => {
 
 // Get and return all Users
 exports.getUserById = (userId) => {
-  if(units){
+  if( users ){
     return users[userId];
   }
   return {};
@@ -513,7 +510,7 @@ exports.addPupil = (unitId, groupId, pupil) => {
     if(units[unitId].metadata){
       pupil.metadata.permissions = units[unitId].metadata.permissions || null;
     }
-  
+
     updates[`pupils/${pupilId}`] = pupil;
     updates[`groups/${groupId}/metadata/pupils/${pupilId}`] = pupilId;
     if(groups[groupId].registeredPupils){
@@ -646,7 +643,7 @@ exports.updateUnit = (unitId, unit) => {
 exports.changePermissions = (user, userId) => {
   if (user && userId) {
     firebase.database().ref(`users/${userId}`).update(user);
-    usersRef.doc(userId).update(user);
+    //usersRef.doc(userId).update(user);
   }
 };
 
