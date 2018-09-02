@@ -36,6 +36,7 @@ const mapStateToProps = (state) => {
   return {
     groups: state.groups,
     isAdmin: state.isAdmin,
+    userPermissisionId: state.userPermissisionId
   }
 }
 
@@ -90,7 +91,14 @@ class UnitGroups extends React.Component<Props, State> {
 
     docs.forEach( (group, index) => {
 
-        console.log(index);
+      let writePermissions = false;
+      if( group.metadata.permissions ) {
+         let permissions = group.metadata.permissions[this.props.userPermissisionId];
+         if( permissions ) {
+           writePermissions = permissions.write || false;
+        }
+      }
+
         let registeredPupils = ( group.registeredPupils || 0 );
 
         _groups.push({
@@ -98,7 +106,8 @@ class UnitGroups extends React.Component<Props, State> {
           id: group.metadata.groupId,
           price: group.price + ' ₪',
           registeredPupils: registeredPupils,
-          isAdmin: isAdmin
+          isAdmin: isAdmin,
+          writeEnabled: writePermissions
         });
 
     });
@@ -362,7 +371,7 @@ class UnitGroups extends React.Component<Props, State> {
             const groupId = row.original.id;
             return <Row>
                       <Col md='4'>
-                        <Button disabled={!row.original.isAdmin}
+                        <Button disabled={!(row.original.writeEnabled || row.original.isAdmin)}
                                 className='btn-round btn-icon btn btn-info btn-sm'
                                 style={{
                                   'padding': '0'
@@ -372,7 +381,7 @@ class UnitGroups extends React.Component<Props, State> {
                         </Button>
                      </Col>
                      <Col md='4'>
-                      <Button disabled={!row.original.isAdmin}
+                      <Button disabled={!(row.original.writeEnabled || row.original.isAdmin)}
                               className='btn-round btn-icon btn btn-danger btn-sm'
                                 style={{
                                   'padding': '0'

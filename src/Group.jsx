@@ -28,7 +28,8 @@ const mapStateToProps = (state) => {
   return {
     groups: state.groups,
     isAdmin: state.isAdmin,
-    pupilsLoaded: state.pupilsLoaded
+    pupilsLoaded: state.pupilsLoaded,
+    userPermissisionId: state.userPermissisionId
   }
 }
 
@@ -102,6 +103,16 @@ class Group extends React.Component<{}, State> {
                                         data.openFrom,
                                         data.openTill,
                                         data.paymentInstallments);
+
+      let writePermissions = false;
+      if( data.metadata.permissions ) {
+        let permissions = data.metadata.permissions[this.props.userPermissisionId];
+        if( permissions ) {
+          writePermissions = permissions.write || false;
+        }
+      }
+
+      _groupData.writeEnabled = writePermissions;
       this.setState({
         groupData: _groupData
       })
@@ -122,7 +133,16 @@ class Group extends React.Component<{}, State> {
   pupilsFromDocs(pupils, isAdmin: Boolean) {
 
     const _pupils = pupils.map( (pupil) => {
-      return new PupilData(pupil.metadata.pupilId,
+
+      let writePermissions = false;
+      if( pupil.metadata.permissions ) {
+        let permissions = pupil.metadata.permissions[this.props.userPermissisionId];
+        if( permissions ) {
+          writePermissions = permissions.write || false;
+        }
+      }
+
+      let _pupil = new PupilData(pupil.metadata.pupilId,
                               `${pupil.name} ${pupil.lastName}`,
                               pupil.lastName,
                               pupil.pupilId,
@@ -133,6 +153,9 @@ class Group extends React.Component<{}, State> {
                               pupil.parentId,
                               pupil.address,
                               isAdmin);
+
+      _pupil.writeEnabled = writePermissions;
+      return _pupil;
     })
 
     if( _pupils.length == 0 ) {
@@ -314,7 +337,7 @@ class Group extends React.Component<{}, State> {
                     </Col>
                     <Col md='2' className='text-right my-auto' >
                       <Button color='primary'
-                              disabled={!this.props.isAdmin}
+                              disabled={!(this.props.isAdmin || this.state.groupData.writeEnabled)}
                               onClick={::this.addPupil}>
                           <span>הוסף תלמיד</span>&nbsp;<i className="fa fa-plus-circle" aria-hidden="true"></i>
                       </Button>
@@ -415,7 +438,7 @@ class Group extends React.Component<{}, State> {
                             const pupilRecordId = row.original.recordId;
                             return <Row>
                                       <Col md='4'>
-                                        <Button disabled={!row.original.isAdmin}
+                                        <Button disabled={!(row.original.writeEnabled || row.original.isAdmin)}
                                                 className='btn-round btn-icon btn btn-info btn-sm'
                                                 id='btnEditPupil'
                                                 style={{
@@ -426,7 +449,7 @@ class Group extends React.Component<{}, State> {
                                         </Button>
                                       </Col>
                                       <Col md='4'>
-                                        <Button disabled={!row.original.isAdmin}
+                                        <Button disabled={!(row.original.writeEnabled || row.original.isAdmin)}
                                                 className='btn-round btn-icon btn btn-danger btn-sm'
                                                 style={{
                                                   'padding': '0'

@@ -45,7 +45,8 @@ const mapStateToProps = (state) => {
     groups: state.groups,
     units: state.units,
     authorities: state.authorities,
-    isAdmin: state.isAdmin
+    isAdmin: state.isAdmin,
+    userPermissisionId: state.userPermissisionId
   }
 }
 
@@ -76,6 +77,13 @@ class Groups extends React.Component<{}, State> {
     try {
       let _groups = groups.map(( group) => {
 
+          let writePermissions = false;
+          if( group.metadata.permissions ) {
+            let permissions = group.metadata.permissions[this.props.userPermissisionId];
+            if( permissions ) {
+              writePermissions = permissions.write || false;
+            }
+          }
           let _unit = database.getUnitById(group.metadata.unitId);
           let _authority = (_unit) ? _unit.authority : undefined;
           let _unitName = (_unit) ? _unit.unitName : undefined;
@@ -91,7 +99,8 @@ class Groups extends React.Component<{}, State> {
             authority: _authority,
             price: group.price,
             capacity: group.capacity,
-            isAdmin: this.props.isAdmin
+            isAdmin: this.props.isAdmin,
+            writeEnabled: writePermissions
           };
       });
       this.setState({
@@ -234,7 +243,7 @@ class Groups extends React.Component<{}, State> {
       modal: !this.state.modal,
       group2Delete: group,
       groupId2Delete: groupId,
-      unitId2Delete: unitId,
+      unitId2Delete: unitId
     });
 
   }
@@ -323,7 +332,7 @@ class Groups extends React.Component<{}, State> {
         const unitId = row.original.unitId;
         return <Row>
           <Col md='4'>
-            <Button disabled={!row.original.isAdmin}
+            <Button disabled={!(row.original.writeEnabled || row.original.isAdmin)}
                     className='btn-round btn-icon btn btn-info btn-sm'
                     style={{
                       'padding': '0'
@@ -333,7 +342,7 @@ class Groups extends React.Component<{}, State> {
             </Button>
           </Col>
           <Col md='4'>
-            <Button disabled={!row.original.isAdmin}
+            <Button disabled={!(row.original.writeEnabled || row.original.isAdmin)}
                     className='btn-round btn-icon btn btn-danger btn-sm'
                     style={{
                       'padding': '0'

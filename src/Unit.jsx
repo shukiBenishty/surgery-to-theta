@@ -31,7 +31,8 @@ type Props = {
 
 const mapStateToProps = (state) => {
   return {
-    isAdmin: state.isAdmin
+    isAdmin: state.isAdmin,
+    userPermissisionId: state.userPermissisionId
   }
 }
 
@@ -50,7 +51,8 @@ class Unit extends React.Component<Props, State> {
       type: '',
       education_type: '',
       long_day_permit: false,
-      status: ''
+      status: '',
+      writeEnabled: false
     },
     unitId: '',
   }
@@ -70,10 +72,18 @@ class Unit extends React.Component<Props, State> {
 
 
   async _loadData(unitId: String) {
-
+    let _unit = database.getUnitById(unitId);
+    let writePermissions = false;
+    if( _unit.metadata.permissions ) {
+      let permissions = _unit.metadata.permissions[this.props.userPermissisionId];
+      if( permissions ) {
+        writePermissions = permissions.write || false;
+      }
+    }
+    _unit.writeEnabled = writePermissions;
     if( unitId !== this.props.id ) {
       this.setState({
-        unit: database.getUnitById(unitId),
+        unit: _unit,
         unitId: unitId
       });
     }
@@ -181,7 +191,7 @@ class Unit extends React.Component<Props, State> {
                               <Button color='primary'
                                       className='align-self-end'
                                       onClick={::this.addGroup}
-                                      disabled={!this.props.isAdmin}>
+                                      disabled={!(this.props.isAdmin || this.state.unit.writeEnabled)}>
                                       <span>הוסף כיתה </span><i className="fa fa-plus-circle" aria-hidden="true"></i>
                               </Button>
                               </div>
