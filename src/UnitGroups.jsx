@@ -349,7 +349,7 @@ class UnitGroups extends React.Component<Props, State> {
                      borderRadius: '2px',
                      transition: 'all .2s ease-out'
                    }}>
-                   {percentage}%
+                   {row.value}/{capacity}
                  </div>
                </div>)
            },

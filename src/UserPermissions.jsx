@@ -9,6 +9,18 @@ import DropdownList from 'react-widgets/lib/DropdownList';
 import classNames from 'classnames';
 import database from './firebase-database.js'
 
+let textFilter = '';
+
+const filterUnitName = (item, value) => {
+  return item.symbol.indexOf(textFilter) === 0
+  || item.unitName.indexOf(textFilter) === 0
+  || item.authority.indexOf(textFilter) === 0;
+}
+
+const onSearch = (searchTerm) => {
+  textFilter = searchTerm;
+}
+
 type State = {
   units: String[],
   groupRoles: String[],
@@ -24,13 +36,7 @@ type State = {
 }
 
 const deepCopy = (mainObj) => {
-  let objCopy = {};
-  let key;
-
-  for (key in mainObj) {
-    objCopy[key] = mainObj[key];
-  }
-  return objCopy;
+  return JSON.parse(JSON.stringify(mainObj));
 }
 
 const mapStateToProps = (state) => {
@@ -46,7 +52,7 @@ class UserPermissions extends React.Component<{}, State> {
   state = {
     readForAll: false,
     writeForAll: false,
-    unitsListOpen: true,
+    unitsListOpen: false,
     units: [],
     groupRoles: [],
     selectedGroup: '',
@@ -57,7 +63,7 @@ class UserPermissions extends React.Component<{}, State> {
     saveChangingTooltipOpen: false,
     unitsDisabled: false,
     role: undefined,
-    toggleButtonText: 'בטל'
+    toggleButtonText: 'פתח'
   }
 
   componentDidMount() {
@@ -69,11 +75,13 @@ class UserPermissions extends React.Component<{}, State> {
         users: this.props.users,
         userId: this.props.userId,
         user: deepCopy(_user),
+        _user: deepCopy(_user),
         units: this.props.units,
         role: {
           label: roleLabel,
           role: _user.role
-        }
+        },
+        unitsDisabled: (roleLabel === 'משתמש') ? false : true
       });
    }
 
@@ -102,6 +110,7 @@ class UserPermissions extends React.Component<{}, State> {
   }
 
   roleChange = (item) => {
+    this.state.user.role = item.role;
     this.setState({
       role: item,
       unitsDisabled: (item.role === 'admin')? true: false
@@ -136,6 +145,7 @@ class UserPermissions extends React.Component<{}, State> {
 
     this.setState({
       unitsListOpen: !this.state.unitsListOpen,
+      user: deepCopy(this.state._user)
     }, () => {
 
       let buttonText = this.state.unitsListOpen ? 'בטל' : 'פתח';
@@ -167,8 +177,10 @@ class UserPermissions extends React.Component<{}, State> {
         } else {
           readForAll = e.target.checked;
           self.props.units.forEach((unit)=>{
-            user.permissions[unit.metadata.unitId] = (user.permissions[unit.metadata.unitId]) ? user.permissions[unit.metadata.unitId] : {};
-            user.permissions[unit.metadata.unitId].read = e.target.checked;
+            if(filterUnitName(unit, textFilter)){
+              user.permissions[unit.metadata.unitId] = (user.permissions[unit.metadata.unitId]) ? user.permissions[unit.metadata.unitId] : {};
+              user.permissions[unit.metadata.unitId].read = e.target.checked;
+            }
           })
         }
         self.setState({
@@ -190,8 +202,11 @@ class UserPermissions extends React.Component<{}, State> {
       } else {
         writeForAll = e.target.checked;
         self.props.units.forEach((unit)=>{
-          user.permissions[unit.metadata.unitId] = (user.permissions[unit.metadata.unitId]) ? user.permissions[unit.metadata.unitId] : {};
-          user.permissions[unit.metadata.unitId].write = e.target.checked;
+          if(filterUnitName(unit, textFilter)){
+            user.permissions[unit.metadata.unitId] = (user.permissions[unit.metadata.unitId]) ? user.permissions[unit.metadata.unitId] : {};
+            user.permissions[unit.metadata.unitId].write = e.target.checked;
+            user.permissions[unit.metadata.unitId].read = e.target.checked;
+          }
         })
       }
       self.setState({
@@ -255,13 +270,6 @@ class UserPermissions extends React.Component<{}, State> {
       </span>
     );
 
-
-    let filterUnitName = (item, value) => {
-      return item.symbol.indexOf(value) === 0
-      || item.unitName.indexOf(value) === 0
-      || item.authority.indexOf(value) === 0;
-    }
-
     const saveChanging = classNames({
       'd-none': !this.state.allowUnitDelete,
       'fa': true,
@@ -303,11 +311,13 @@ class UserPermissions extends React.Component<{}, State> {
             <Col md='7'>
               <DropdownList
                   filter={filterUnitName}
+                  onSearch={onSearch}
                   itemComponent={this.ListUnits}
                   valueComponent={this.ListUnits}
                   value={{"symbol": "סמל מוסד", "unitName": "שם מוסד"}}
                   open={this.state.unitsListOpen}
-                  onToggle={ ()=>{}}
+                  readOnly={!this.state.unitsListOpen}
+                  selectIcon={null}
                   data={this.state.units}
                   groupBy="authority"
                   groupComponent={GroupHeading}
@@ -332,11 +342,11 @@ class UserPermissions extends React.Component<{}, State> {
                     </button>
                   </Col>
                   <Col md='3'>
-                    <button type='button'
-                            className='btn-outline-primary'
-                            onClick={::this.onCancel}>
-                          {this.state.toggleButtonText}
-                    </button>
+                  {!this.state.unitsDisabled && <button type='button'
+                                                className='btn-outline-primary'
+                                                onClick={::this.onCancel}>
+                                                {this.state.toggleButtonText}
+                                              </button>}
                   </Col>
                 </Row>
             </Col>
