@@ -147,6 +147,9 @@ app.post('/pupil', (req, res) => {
                   pupil.metadata.unitId = _group.metadata.unitId;
                   pupil.metadata.groupId = key;
                   pupil.metadata.pupilId = pupilId;
+                  if(_group.metadata){
+                    pupil.metadata.permissions = _group.metadata.permissions || null;
+                  }
                   updates[`pupils/${pupilId}`] = pupil;
                   updates[`groups/${key}/metadata/pupils/${pupilId}`] = pupilId;
                   updates[`groups/${key}/registeredPupils`] = _group.registeredPupils + 1;
