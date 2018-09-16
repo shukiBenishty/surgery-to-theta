@@ -217,10 +217,9 @@ app.get('/updatePermissionsForAll', (req, res) => {
                     _pupils[pupilId].metadata.unitId && 
                     _pupils[pupilId].metadata.groupId && 
                     _units[_pupils[pupilId].metadata.unitId] &&
-                    _units[_pupils[pupilId].metadata.unitId].metadata &&
-                    _units[_pupils[pupilId].metadata.unitId].metadata.permissions
+                    _units[_pupils[pupilId].metadata.unitId].metadata 
                   ){
-                    updates[`pupils/${pupilId}/metadata/permissions`] = _units[_pupils[pupilId].metadata.unitId].metadata.permissions;
+                    updates[`pupils/${pupilId}/metadata/permissions`] = _units[_pupils[pupilId].metadata.unitId].metadata.permissions || null;
                 } else {
                   console.log(`error while try to update permissions to pupil ${pupilId}`);
                 }
@@ -232,10 +231,9 @@ app.get('/updatePermissionsForAll', (req, res) => {
                     _groups[groupId].metadata &&
                     _groups[groupId].metadata.unitId && 
                     _units[_groups[groupId].metadata.unitId] &&
-                    _units[_groups[groupId].metadata.unitId].metadata &&
-                    _units[_groups[groupId].metadata.unitId].metadata.permissions
+                    _units[_groups[groupId].metadata.unitId].metadata
                   ){
-                    updates[`groups/${groupId}/metadata/permissions`] = _units[_groups[groupId].metadata.unitId].metadata.permissions
+                    updates[`groups/${groupId}/metadata/permissions`] = _units[_groups[groupId].metadata.unitId].metadata.permissions || null
                 } else {
                   console.log(`error while try to update permissions to group ${groupId}`);
                 }
