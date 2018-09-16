@@ -179,7 +179,86 @@ app.post('/pupil', (req, res) => {
         })
     });
 
+app.get('/updatePermissionsForAll', (req, res) => {
+  let updates = {};
+  let promises = [];
+  let _units = {};
+  let _pupils = {};
+  let _groups = {};
 
+  promises.push(realTimeDB.ref('units')
+                          .once('value')
+                          .then((unitsSnapshot) => {
+                            _units = unitsSnapshot.val();
+                            return _units;
+                          })
+  );
+  promises.push(realTimeDB.ref('groups')
+                          .once('value')
+                          .then((groupsSnapshot) => {
+                            _groups = groupsSnapshot.val();
+                            return _groups;
+                          })
+  );
+  promises.push(realTimeDB.ref('pupils')
+                          .once('value')
+                          .then((pupilsSnapshot) => {
+                            _pupils = pupilsSnapshot.val();
+                            return _pupils;
+                          })
+  );
+  return Promise.all(promises)
+          .then(() => {
+            for (let pupilId in _pupils) {
+              if (_pupils.hasOwnProperty(pupilId)) {
+                if (
+                    _pupils[pupilId] &&
+                    _pupils[pupilId].metadata &&
+                    _pupils[pupilId].metadata.unitId && 
+                    _pupils[pupilId].metadata.groupId && 
+                    _units[_pupils[pupilId].metadata.unitId] &&
+                    _units[_pupils[pupilId].metadata.unitId].metadata &&
+                    _units[_pupils[pupilId].metadata.unitId].metadata.permissions
+                  ){
+                    updates[`pupils/${pupilId}/metadata/permissions`] = _units[_pupils[pupilId].metadata.unitId].metadata.permissions;
+                } else {
+                  console.log(`error while try to update permissions to pupil ${pupilId}`);
+                }
+              }
+            }
+            for (let groupId in _groups) {
+              if (_groups.hasOwnProperty(groupId)) {
+                if (_groups[groupId] &&
+                    _groups[groupId].metadata &&
+                    _groups[groupId].metadata.unitId && 
+                    _units[_groups[groupId].metadata.unitId] &&
+                    _units[_groups[groupId].metadata.unitId].metadata &&
+                    _units[_groups[groupId].metadata.unitId].metadata.permissions
+                  ){
+                    updates[`groups/${groupId}/metadata/permissions`] = _units[_groups[groupId].metadata.unitId].metadata.permissions
+                } else {
+                  console.log(`error while try to update permissions to group ${groupId}`);
+                }
+              }
+            }
+            return realTimeDB.ref().update(updates).then(() => {
+              return res.status(200).json({
+                status: "ok"
+              })
+            });
+          })
+          .catch((err) =>{
+            console.error(err);
+            return res.status(200)
+                  .json({
+                      errorCode: 2,
+                      errorMessage: err.message
+                    });
+      
+        })
+
+})
+    
 
 app.get('/registeredPupilsInGroups', (req, res) => {
   let updates = {};
